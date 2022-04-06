@@ -1,0 +1,4 @@
+// class FASTAReading {
+//     id
+//     sequence
+// }
