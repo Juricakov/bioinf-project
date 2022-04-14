@@ -36,8 +36,7 @@ const contig2EndIndex = originalSequence.length;
 const contig2 = originalSequence.substring(contig2StartIndex, contig2EndIndex);
 
 // bridge sequence is a sequence that overlaps with both contigs by 4 bases
-
-const bridgeSequenceStartIndex = contig1EndIndex - 1;
+const bridgeSequenceStartIndex = contig1EndIndex - 4;
 const bridgeSequenceEndIndex = contig2StartIndex + 4;
 const bridgeSequence = originalSequence.substring(
   bridgeSequenceStartIndex,
