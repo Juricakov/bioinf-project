@@ -36,9 +36,12 @@ const contig2EndIndex = originalSequence.length;
 const contig2 = originalSequence.substring(contig2StartIndex, contig2EndIndex);
 
 // bridge sequence is a sequence that overlaps with both contigs by 4 bases
+
+const bridgeSequenceStartIndex = contig1EndIndex - 1;
+const bridgeSequenceEndIndex = contig2StartIndex + 4;
 const bridgeSequence = originalSequence.substring(
-  contig1EndIndex - 4,
-  contig2StartIndex + 4
+  bridgeSequenceStartIndex,
+  bridgeSequenceEndIndex
 );
 
 const readingCount = process.argv[3];
@@ -70,9 +73,15 @@ for (let i = 0; i < readingCount; i++) {
       ? bridgeSequence.length
       : (i + 1) * singleReadingSize + 2;
 
-  let reading = bridgeSequence.substring(readingStart, readingEnd);
-  if (Math.random() < readingComplementProbability) {
-    reading = complement(reading);
+  let reading = {
+    isComplemented: Math.random() < readingComplementProbability,
+    sequence: bridgeSequence.substring(readingStart, readingEnd),
+    bridgeSequenceRelativeStartIndex: readingStart,
+    bridgeSequenceRelativeEndIndex: readingEnd,
+  };
+
+  if (reading.isComplemented) {
+    reading.sequence = complement(reading.sequence);
   }
 
   readings.push(reading);
@@ -90,4 +99,31 @@ function writeFASTA(sequences, namePrefix, fileName) {
 
 writeFASTA([originalSequence], "original", "original.fasta");
 writeFASTA([contig1, contig2], "ctg", "contigs.fasta");
-writeFASTA(readings, "read", "readings.fasta");
+writeFASTA(
+  readings.map((r) => r.sequence),
+  "read",
+  "readings.fasta"
+);
+
+const visualizationLines = [originalSequence];
+
+visualizationLines.push(
+  `${contig1}${" ".repeat(contig2StartIndex - contig1EndIndex)}${contig2}\n`
+);
+
+readings.forEach((reading) => {
+  let whitespaceCountBefore =
+    bridgeSequenceStartIndex + reading.bridgeSequenceRelativeStartIndex;
+
+  if (reading.isComplemented) {
+    whitespaceCountBefore--;
+  }
+
+  const readingLine = `${" ".repeat(whitespaceCountBefore)}${
+    reading.isComplemented ? "-" : ""
+  }${reading.sequence}`;
+
+  visualizationLines.push(readingLine);
+});
+
+fs.writeFileSync("visualization.txt", `${visualizationLines.join("\n")}\n`);
