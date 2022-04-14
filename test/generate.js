@@ -1,5 +1,8 @@
 const fs = require("fs");
 
+// always generates 2 contigs
+// node generate.js {sequence_length} {reading_count} {reading complement probability}
+
 function randomIndexInRange(min, max) {
   return min + Math.floor(Math.random() * (max - min));
 }
