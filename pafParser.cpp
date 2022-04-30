@@ -4,32 +4,11 @@
 #include <unordered_map>
 #include <fstream>
 #include <regex>
+#include <queue>
 
-#define CONTIG_SUFFIX "Cmpl"
+#define COMPLEMENT_SUFFIX "Cmpl"
 
 using namespace std;
-
-// read PAF file
-// create node objects
-// create overlap objects
-// add overlap data pointers to relevant nodes
-/*
-
-node 1 = {
-    contig1
-    overlaps: [overlap1ptr, overlap 2ptr]
-}
-
-node 2 = {
-    reading 1
-    overlaps [overlap1ptr]
-}
-
-node 3 = {
-    reading 2
-    overlaops [overlap 2ptr]
-}
-*/
 
 // code sketch, classes should be in seperate files
 
@@ -102,6 +81,10 @@ public:
     vector<Edge *> overlaps;
     Node *complement = nullptr;
 
+    // needed for search
+    float quality = 0;
+    Node *previous = nullptr;
+
     Node(){};
 
     // key is automatically set to same value as id
@@ -119,7 +102,7 @@ public:
         string newKey = name;
         if (isCompl)
         {
-            newKey = newKey + CONTIG_SUFFIX;
+            newKey = newKey + COMPLEMENT_SUFFIX;
         }
 
         type = t;
@@ -177,6 +160,11 @@ public:
         return nodes.find(nodeKey) != nodes.end();
     }
 
+    bool contigInGraph(string nodeKey)
+    {
+        return contigs.find(nodeKey) != contigs.end();
+    }
+
     Node *getNode(string nodeKey)
     {
         if (nodeInGraph(nodeKey))
@@ -188,7 +176,8 @@ public:
 
     Node *getContig(string contigKey)
     {
-        if (nodeInGraph(contigKey))
+        cout << contigKey << endl;
+        if (contigInGraph(contigKey))
         {
             return contigs.at(contigKey);
         }
@@ -200,7 +189,7 @@ public:
     pair<Node *, Node *> getOrInitialize(string id, int length, Type type)
     {
         Node *regular = getNode(id);
-        Node *complement = getNode(id + CONTIG_SUFFIX);
+        Node *complement = getNode(id + COMPLEMENT_SUFFIX);
 
         // both already exist
         if (regular != nullptr && complement != nullptr)
@@ -259,112 +248,217 @@ ostream &operator<<(std::ostream &strm, const Edge &e)
                 << ", " << e.alignmentBlockLengt << ", " << e.mappingQuality << ")";
 }
 
-Graph readPafFile(string filename)
+// add multiple files
+// overlaps reads-reads and overlaps contig-reads
+Graph readPafFile(vector<string> filenames)
 {
-    ifstream inFile;
-    inFile.open(filename);
-
-    string ln;
     Graph graph = Graph();
+    ifstream inFile;
 
-    int num = 0;
-
-    while (getline(inFile, ln))
+    for (auto file : filenames)
     {
-        vector<string> spllitedLine = split(ln, "\t");
 
-        string querySequenceName = spllitedLine[0];
-        int querySequenceLength = stoi(spllitedLine[1]);
+        inFile.open(file);
 
-        char relativeStrand = spllitedLine[4][0];
+        string ln;
 
-        pair<Node *, Node *> queryNodes = graph.getOrInitialize(
-            querySequenceName,
-            querySequenceLength,
-            getSequenceTypeFromName(querySequenceName));
+        cout << file << endl;
 
-        string targetSequenceName = spllitedLine[5];
-        int targetSequenceLength = stoi(spllitedLine[6]);
-
-        pair<Node *, Node *> targetNodes = graph.getOrInitialize(
-            targetSequenceName,
-            targetSequenceLength,
-            getSequenceTypeFromName(targetSequenceName));
-
-        int startQueryIndex = stoi(spllitedLine[2]);
-        int endQUeryIndex = stoi(spllitedLine[3]);
-
-        int startTargetIndex = stoi(spllitedLine[7]);
-        int endTargetIndex = stoi(spllitedLine[8]);
-
-        // reverse indexes
-        // add edges beetwen regular and complement
-        if (relativeStrand == '-')
+        while (getline(inFile, ln))
         {
-            int startTargetIndexHelper = targetSequenceLength - 1 - endTargetIndex;
-            int endTargetIndexHepler = targetSequenceLength - 1 - startTargetIndex;
+            // space for test files
+            vector<string> spllitedLine = split(ln, " ");
 
-            Edge *edge1 = new Edge(
-                querySequenceName, targetSequenceName + CONTIG_SUFFIX, startQueryIndex,
-                endQUeryIndex, relativeStrand, startTargetIndexHelper,
-                endTargetIndexHepler, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                stoi(spllitedLine[11]));
+            string querySequenceName = spllitedLine[0];
+            int querySequenceLength = stoi(spllitedLine[1]);
 
-            queryNodes.first->addOverlap(edge1);
-            targetNodes.second->addOverlap(edge1);
+            char relativeStrand = spllitedLine[4][0];
 
-            int startQueryIndexHelper = querySequenceLength - 1 - endQUeryIndex;
-            int endQueryIndexHepler = querySequenceLength - 1 - startQueryIndex;
+            pair<Node *, Node *> queryNodes = graph.getOrInitialize(
+                querySequenceName,
+                querySequenceLength,
+                getSequenceTypeFromName(querySequenceName));
 
-            Edge *edge2 = new Edge(
-                querySequenceName + CONTIG_SUFFIX, targetSequenceName, startQueryIndexHelper,
-                endQueryIndexHepler, relativeStrand, startTargetIndex,
-                endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                stoi(spllitedLine[11]));
+            string targetSequenceName = spllitedLine[5];
+            int targetSequenceLength = stoi(spllitedLine[6]);
 
-            queryNodes.second->addOverlap(edge2);
-            targetNodes.first->addOverlap(edge2);
+            pair<Node *, Node *> targetNodes = graph.getOrInitialize(
+                targetSequenceName,
+                targetSequenceLength,
+                getSequenceTypeFromName(targetSequenceName));
+
+            int startQueryIndex = stoi(spllitedLine[2]);
+            int endQUeryIndex = stoi(spllitedLine[3]);
+
+            int startTargetIndex = stoi(spllitedLine[7]);
+            int endTargetIndex = stoi(spllitedLine[8]);
+
+            // reverse indexes
+            // add edges beetwen regular and complement
+            if (relativeStrand == '-')
+            {
+                int startTargetIndexHelper = targetSequenceLength - 1 - endTargetIndex;
+                int endTargetIndexHepler = targetSequenceLength - 1 - startTargetIndex;
+
+                Edge *edge1 = new Edge(
+                    querySequenceName, targetSequenceName + COMPLEMENT_SUFFIX, startQueryIndex,
+                    endQUeryIndex, relativeStrand, startTargetIndexHelper,
+                    endTargetIndexHepler, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
+                    stoi(spllitedLine[11]));
+
+                queryNodes.first->addOverlap(edge1);
+                targetNodes.second->addOverlap(edge1);
+
+                int startQueryIndexHelper = querySequenceLength - 1 - endQUeryIndex;
+                int endQueryIndexHepler = querySequenceLength - 1 - startQueryIndex;
+
+                Edge *edge2 = new Edge(
+                    querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName, startQueryIndexHelper,
+                    endQueryIndexHepler, relativeStrand, startTargetIndex,
+                    endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
+                    stoi(spllitedLine[11]));
+
+                queryNodes.second->addOverlap(edge2);
+                targetNodes.first->addOverlap(edge2);
+            }
+            // no index reversing, add edges beetwen regulars
+            else
+            {
+                Edge *edge1 = new Edge(
+                    querySequenceName, targetSequenceName, startQueryIndex,
+                    endQUeryIndex, relativeStrand, startTargetIndex,
+                    endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
+                    stoi(spllitedLine[11]));
+
+                queryNodes.first->addOverlap(edge1);
+                targetNodes.first->addOverlap(edge1);
+
+                Edge *edge2 = new Edge(
+                    querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
+                    querySequenceLength - 1 - endQUeryIndex, querySequenceLength - 1 - startQueryIndex,
+                    relativeStrand, targetSequenceLength - 1 - endTargetIndex, targetSequenceLength - 1 - startTargetIndex,
+                    stoi(spllitedLine[9]), stoi(spllitedLine[10]),
+                    stoi(spllitedLine[11]));
+
+                queryNodes.second->addOverlap(edge2);
+                targetNodes.second->addOverlap(edge2);
+            }
         }
-        // no index reversing, add edges beetwen regulars
+        inFile.close();
+    }
+    return graph;
+}
+
+Node *greedySearch(Node *start, Node *goal, Graph *g)
+{
+
+    string firstKey = start->key;
+
+    Node *previous = start;
+
+    // change to std::unordered_set if only keys need to be stored
+    // both unordered set and map have constant time complexity for 
+    // search, insertion and removal
+    unordered_map<string, float> closed;
+
+    while (start != nullptr)
+    {
+        // neither regular nor complement can be used again
+        closed[start->id] == start->quality;
+        closed[start->id + COMPLEMENT_SUFFIX] == start->quality;
+
+        // cout << "START " << start->key << " " << start->quality << endl;
+
+        // possible to move check to successor iteration?
+        // risk of overlap of lower quality?
+        if (start->id == goal->id)
+        {
+            return start;
+        }
+
+        // skip contig
+        if (start->type == CONTIG && start->key != firstKey)
+        {
+            start = previous;
+            previous = start->previous;
+            continue;
+        }
+
+        // quality always greather then one
+        // cant set quality and key to first succesor
+        // because it is possible that that node is already
+        // wisited
+        float maxQuality = -1;
+        string key = "";
+
+        // find next by finding best overlap
+        for (auto overlap : start->overlaps)
+        {
+            // should use other mesure, proper one defined in hera paper
+            float quality = overlap->alignmentBlockLengt;
+            string tempKey = overlap->getNeighbour(start->key);
+
+            // best mapping and not opened before
+            if (quality > maxQuality && closed.find(tempKey) == closed.end())
+            {
+                maxQuality = quality;
+                key = tempKey;
+            }
+        }
+
+        // no next node found, need to back-track
+        if (key == "")
+        {
+            start = previous;
+            previous = start->previous;
+        }
         else
         {
-            Edge *edge1 = new Edge(
-                querySequenceName, targetSequenceName, startQueryIndex,
-                endQUeryIndex, relativeStrand, startTargetIndex,
-                endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                stoi(spllitedLine[11]));
-
-            queryNodes.first->addOverlap(edge1);
-            targetNodes.first->addOverlap(edge1);
-
-            Edge *edge2 = new Edge(
-                querySequenceName + CONTIG_SUFFIX, targetSequenceName + CONTIG_SUFFIX,
-                querySequenceLength - 1 - endQUeryIndex, querySequenceLength - 1 - startQueryIndex,
-                relativeStrand, targetSequenceLength - 1 - endTargetIndex, targetSequenceLength - 1 - startTargetIndex,
-                stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                stoi(spllitedLine[11]));
-
-            queryNodes.second->addOverlap(edge2);
-            targetNodes.second->addOverlap(edge2);
+            previous = start;
+            start = g->getNode(key);
+            start->quality = maxQuality;
+            start->previous = previous;
         }
     }
+    return nullptr;
+}
 
-    inFile.close();
-    return graph;
+bool operator<(const Node &n1, const Node &n2)
+{
+    return n1.quality < n2.quality;
 }
 
 int main(int argc, char const *argv[])
 {
-    string fileName = "overlaps.paf";
+    vector<string> fileNames{"read-read.paf", "contig-read.paf"};
+    // vector<string> fileNames{"overlaps1.paf", "overlaps2.paf"};
 
     cout << "start" << endl;
 
-    Graph g = readPafFile(fileName);
+    Graph g = readPafFile(fileNames);
 
     cout << "end" << endl;
 
     cout << "num nodes: " << g.nodes.size() << endl;
     cout << "num contigs: " << g.contigs.size() << endl;
+
+    // check if ctg0 exists in file you are testing
+    auto res = greedySearch(g.getContig("ctg0"), g.getContig("ctg1"), &g);
+
+    cout << endl;
+
+    cout << res->key << endl;
+
+    if (res->previous != nullptr)
+    {
+        auto next = res->previous;
+
+        while (next != nullptr)
+        {
+            cout << next->key << endl;
+            next = next->previous;
+        }
+    }
 
     return 0;
 }
