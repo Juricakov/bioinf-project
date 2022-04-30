@@ -4,220 +4,10 @@
 #include <unordered_map>
 #include <fstream>
 #include <regex>
-#include <queue>
-
-#define COMPLEMENT_SUFFIX "Cmpl"
+#include "Global.h"
+#include "Graph.h"
 
 using namespace std;
-
-// code sketch, classes should be in seperate files
-
-enum Type
-{
-    CONTIG,
-    READ
-};
-
-// edges represent overlaps
-class Edge
-{
-public:
-    string querySequenceName;
-    string targetSequenceName;
-    // where overlap starts on query
-    int queryStart;
-    int queryEnd;
-
-    // regular or complement
-    char relativeStrand;
-
-    // takes complementing in the account?
-    int targetStart;
-    int targetEnd;
-
-    int numberOfMatches;
-    int alignmentBlockLengt;
-    int mappingQuality;
-
-    Edge(){};
-
-    Edge(string query, string target, int qStart, int qEnd, char strand,
-         int tStart, int tEnd, int numMatches, int allignLen, int quality)
-    {
-        querySequenceName = query;
-        targetSequenceName = target;
-        queryStart = qStart;
-        queryEnd = qEnd;
-        relativeStrand = strand;
-        targetStart = tStart;
-        targetEnd = tEnd;
-        numberOfMatches = numMatches;
-        alignmentBlockLengt = allignLen;
-        mappingQuality = quality;
-    }
-
-    string getNeighbour(string sequenceName)
-    {
-        return (querySequenceName == sequenceName) ? targetSequenceName : querySequenceName;
-    }
-};
-
-// nodes represent reads
-// in hera paper complementary nodes are also connected, should not be possible to use
-// both original and complement
-// id is id of the read/contig, will be used for merging
-class Node
-{
-public:
-    Type type;
-    string id;
-
-    // used for storing complements in dictionary
-    // id is same but when merging complement needs to be calculated
-    // for regular nodes key and id are identical
-    string key;
-
-    int length;
-    vector<Edge *> overlaps;
-    Node *complement = nullptr;
-
-    // needed for search
-    float quality = 0;
-    Node *previous = nullptr;
-
-    Node(){};
-
-    // key is automatically set to same value as id
-    Node(Type t, string name, int len)
-    {
-        type = t;
-        id = name;
-        key = name;
-        length = len;
-    };
-
-    // constructor for complements, automatic key change
-    Node(Type t, string name, int len, Node *c, bool isCompl)
-    {
-        string newKey = name;
-        if (isCompl)
-        {
-            newKey = newKey + COMPLEMENT_SUFFIX;
-        }
-
-        type = t;
-        id = name;
-        key = newKey;
-        complement = c;
-        length = len;
-    };
-
-    void addOverlap(Edge *overlap)
-    {
-        overlaps.push_back(overlap);
-    }
-
-    bool isComplement()
-    {
-        return !(key == id);
-    }
-};
-
-class Graph
-{
-public:
-    // all nodes, map for fast searching by key
-    unordered_map<string, Node *> nodes;
-
-    // just contigs, could be useful in algorithm implementation
-    // remove if memory usage too big (there should be only few contigs
-    // so this will probably not cause problems)
-    unordered_map<string, Node *> contigs;
-
-    // adds node if it is not already in the graph
-    // returns true if added
-    bool addNode(Node *node)
-    {
-        string nodeKey = (*node).key;
-
-        if (nodeInGraph(nodeKey))
-        {
-            return false;
-        }
-
-        nodes[nodeKey] = node;
-
-        if ((*node).type == CONTIG)
-        {
-            contigs[nodeKey] = node;
-        }
-
-        return true;
-    }
-
-    bool nodeInGraph(string nodeKey)
-    {
-        return nodes.find(nodeKey) != nodes.end();
-    }
-
-    bool contigInGraph(string nodeKey)
-    {
-        return contigs.find(nodeKey) != contigs.end();
-    }
-
-    Node *getNode(string nodeKey)
-    {
-        if (nodeInGraph(nodeKey))
-        {
-            return nodes.at(nodeKey);
-        }
-        return nullptr;
-    }
-
-    Node *getContig(string contigKey)
-    {
-        cout << contigKey << endl;
-        if (contigInGraph(contigKey))
-        {
-            return contigs.at(contigKey);
-        }
-        return nullptr;
-    }
-
-    // if present return otherwise create new one and return
-    // always create pairs, first is regular, second complement
-    pair<Node *, Node *> getOrInitialize(string id, int length, Type type)
-    {
-        Node *regular = getNode(id);
-        Node *complement = getNode(id + COMPLEMENT_SUFFIX);
-
-        // both already exist
-        if (regular != nullptr && complement != nullptr)
-        {
-            return make_pair(regular, complement);
-        }
-
-        // create both
-        regular = new Node(
-            type,
-            id,
-            length);
-
-        complement = new Node(
-            type,
-            id,
-            length,
-            regular,
-            true);
-
-        regular->complement = complement;
-
-        addNode(regular);
-        addNode(complement);
-
-        return make_pair(regular, complement);
-    }
-};
 
 vector<string> split(const string str, const string regex_str)
 {
@@ -234,9 +24,9 @@ Type getSequenceTypeFromName(string name)
     string label = name.substr(0, 3);
     if (label == "ctg" || label == "Ctg" || label == "CTG")
     {
-        return CONTIG;
+        return Type::CONTIG;
     }
-    return READ;
+    return Type::READ;
 }
 
 // fake to string for edge, for testing purposes
@@ -357,7 +147,7 @@ Node *greedySearch(Node *start, Node *goal, Graph *g)
     Node *previous = start;
 
     // change to std::unordered_set if only keys need to be stored
-    // both unordered set and map have constant time complexity for 
+    // both unordered set and map have constant time complexity for
     // search, insertion and removal
     unordered_map<string, float> closed;
 
@@ -377,7 +167,7 @@ Node *greedySearch(Node *start, Node *goal, Graph *g)
         }
 
         // skip contig
-        if (start->type == CONTIG && start->key != firstKey)
+        if (start->type == Type::CONTIG && start->key != firstKey)
         {
             start = previous;
             previous = start->previous;
