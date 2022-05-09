@@ -1,1 +1,0 @@
-// take one sequence, sequence name and produce fasta file
