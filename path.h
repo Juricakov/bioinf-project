@@ -1,7 +1,8 @@
-#include "Edge.h"
 #include "vector"
 #include "Node.h"
-// TODO Jurica implement
+#include "Edge.h"
+#include <unordered_map>
+
 class Path
 {
 private:
@@ -9,10 +10,11 @@ private:
 
 public:
     Path();
-    bool isDeadEnd();
+    bool isDeadEnd(std::unordered_map<string, Node *> lookup);
     Edge *pop();
     void push(Edge *edge);
-    Node *getStart();
-    Node *getEnd();
+    Node *getStart(std::unordered_map<string, Node *> lookup);
+    Node *getEnd(std::unordered_map<string, Node *> lookup);
     int size();
+    std::vector<Edge *> getEdges();
 };
