@@ -4,7 +4,7 @@
 #include "heuristic.h"
 #include "pathSelector.h"
 
-// TODO Jurica implement
+// TODO Grigor implement
 class PathGenerator
 {
 public:
