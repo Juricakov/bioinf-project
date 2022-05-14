@@ -4,6 +4,7 @@
 #include "Edge.h"
 
 using namespace std;
+// TODO Grigor add sequences
 
 // nodes represent reads
 // in hera paper complementary nodes are also connected, should not be possible to use
@@ -12,9 +13,9 @@ using namespace std;
 class Node
 {
 public:
-
     Type type;
     string id;
+    string sequence;
 
     // used for storing complements in dictionary
     // id is same but when merging complement needs to be calculated
@@ -24,10 +25,6 @@ public:
     int length;
     vector<Edge *> overlaps;
     Node *complement = nullptr;
-
-    // needed for search
-    float quality = 0;
-    Node *previous = nullptr;
 
     Node(){};
 

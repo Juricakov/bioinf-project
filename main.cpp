@@ -1,5 +1,8 @@
+// TODO Grigor implement
+
 int main()
 {
+
     // validate files exist
     // create fasta reader / writer / merger ...
     // call paf parser to generate graph

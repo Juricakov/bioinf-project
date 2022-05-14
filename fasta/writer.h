@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include "../namedSequence.h"
+#include "namedSequence.h"
 
 class FASTAWriter
 {

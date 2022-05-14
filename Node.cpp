@@ -1,6 +1,5 @@
 #include "Node.h"
 
-
 Node::Node(Type t, string name, int len)
 {
     type = t;

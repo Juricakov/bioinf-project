@@ -9,3 +9,13 @@
 // ctg3 = GCCAAA
 
 // output = CTGACCAAGCCAAA
+#include <string>
+#include "path.h"
+#include "vector"
+
+// TODO Jurica implement
+class PathMerger
+{
+public:
+    static Path *merge(std::vector<Path *> paths);
+};

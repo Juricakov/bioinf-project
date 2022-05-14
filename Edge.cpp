@@ -1,7 +1,8 @@
 #include "Edge.h"
 
+// TODO Grigor update / implement
 Edge::Edge(string query, string target, int qStart, int qEnd, char strand,
-           int tStart, int tEnd, int numMatches, int allignLen, int quality)
+           int tStart, int tEnd, int allignLen)
 {
     querySequenceName = query;
     targetSequenceName = target;
@@ -10,9 +11,7 @@ Edge::Edge(string query, string target, int qStart, int qEnd, char strand,
     relativeStrand = strand;
     targetStart = tStart;
     targetEnd = tEnd;
-    numberOfMatches = numMatches;
-    alignmentBlockLengt = allignLen;
-    mappingQuality = quality;
+    alignmentBlockLength = allignLen;
 }
 
 string Edge::getNeighbour(string sequenceName)
