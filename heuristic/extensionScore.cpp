@@ -58,5 +58,12 @@ public:
     }
 
     bool hasNext() { return this->currentIndex < this->edges.size(); };
-    Edge *getNext() { return this->edges[this->currentIndex++]; };
+    Edge *getNext()
+    {
+        if (!this->hasNext())
+        {
+            throw std::runtime_error("Extension Score Heuristic has no more elements");
+        }
+        return this->edges[this->currentIndex++];
+    };
 };
