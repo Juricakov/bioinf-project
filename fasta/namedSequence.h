@@ -7,7 +7,7 @@ public:
     NamedSequnce(std::string name, std::string sequence);
     std::string name;
     std::string sequence;
-    // TODO Jurica implement
-    NamedSequnce complement();
+    // TODO Jurica
+    std::string complement();
     friend std::ostream &operator<<(std::ostream &os, const NamedSequnce &reading);
 };
