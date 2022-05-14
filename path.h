@@ -16,8 +16,3 @@ public:
     Node *getEnd();
     int size();
 };
-
-// Path klasa definicija
-// Heuristic definicija (sve 3)
-// Dodat u Edge pointere na nodeove.
-// dodat sequence u Node

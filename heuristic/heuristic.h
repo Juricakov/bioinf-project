@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-// TODO Jurica implement
 class Heuristic
 {
 protected:
