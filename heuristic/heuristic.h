@@ -3,11 +3,26 @@
 #include "vector"
 #include <unordered_map>
 #include <stdexcept>
+#include <algorithm>
 
 // TODO Jurica implement
 class Heuristic
 {
+protected:
+    std::vector<Edge *> edges;
+    Heuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup)
+    {
+        std::copy_if(edges.begin(), edges.end(), std::back_inserter(this->edges), [lookup, this](Edge *e)
+                     { return this->extends(e, lookup); });
+    }
+
 private:
+    /*
+            012345 678 9
+    QUERY = AAAAAA[AAA]G
+              012 345
+    TARGET = [AAA]BBC
+    */
     bool extends(Edge *edge, std::unordered_map<string, Node *> lookup)
     {
         auto queryNode = lookup[edge->querySequenceName];
@@ -21,9 +36,16 @@ private:
             throw std::invalid_argument("Missing target node in lookup");
         }
 
-        return queryNode->sequence.length() - edge->queryStart > targetNode->sequence.length() - edge->targetStart;
+        // ~ len BBC
+        int baseCountAfterOverlapOnQuerySeq = queryNode->sequence.length() - edge->queryEnd;
+        // ~ len G
+        int baseCountAfterOverlapOnTargetSeq = targetNode->sequence.length() - edge->targetEnd;
+
+        // will extend reading as long as len(BBC) > len(G)
+        return baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq;
     }
 
 public:
-    virtual std::vector<Edge *> sortOverlaps(Node *node, std::unordered_map<string, Node *> lookup) = 0;
+    virtual Edge *getNext() = 0;
+    virtual bool hasNext() = 0;
 };
