@@ -1,5 +1,4 @@
 #include <string>
-#include "Node.h"
 
 using namespace std;
 
@@ -7,8 +6,8 @@ using namespace std;
 class Edge
 {
 public:
-    Node *querySequence;
-    Node *targetSequence;
+    std::string querySequenceName;
+    std::string targetSequenceName;
     // where overlap starts on query
     int queryStart;
     int queryEnd;
