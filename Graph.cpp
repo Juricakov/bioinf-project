@@ -1,4 +1,6 @@
 #include "Graph.h"
+#include "fasta/namedSequence.h"
+#include <memory>
 
 bool Graph::addNode(Node *node)
 {
@@ -72,9 +74,28 @@ pair<Node *, Node *> Graph::getOrInitialize(string id, int length, Type type)
             true);
 
         regular->complement = complement;
+        complement->complement = regular;
 
         addNode(regular);
         addNode(complement);
 
         return make_pair(regular, complement);
     }
+
+void Graph::addSequences(vector<shared_ptr<NamedSequnce>> sequences){
+
+    for (auto sequence: sequences){
+        Node * node = this->getNode(sequence->name);
+        
+        if (node == nullptr){
+            // is it possible that no edges were found for read/contig?
+            // todo check and change exception
+            throw runtime_error("should not be nullptr");
+        }
+        
+        Node* complement = node->complement;
+        
+        node->sequence = sequence->sequence;
+        complement->sequence = sequence->complement();
+    }
+}

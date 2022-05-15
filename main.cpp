@@ -1,7 +1,7 @@
 // TODO Grigor implement
 
-int main()
-{
+//int main()
+//{
 
     // validate files exist
     // create fasta reader / writer / merger ...
@@ -10,4 +10,4 @@ int main()
     // perform path selection
     // create DNA sequence using merger
     // write sequence to fasta file
-}
+//}

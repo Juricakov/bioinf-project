@@ -6,8 +6,13 @@ using namespace std;
 class Edge
 {
 public:
+<<<<<<< HEAD
     std::string querySequenceName;
     std::string targetSequenceName;
+=======
+    string querySequenceName;
+    string targetSequenceName;
+>>>>>>> dc11ade (adds sequences to node class)
     // where overlap starts on query
     int queryStart;
     int queryEnd;
@@ -19,12 +24,12 @@ public:
     int targetStart;
     int targetEnd;
 
-    int alignmentBlockLengt;
+    int alignmentBlockLength;
 
     Edge();
 
     Edge(string query, string target, int qStart, int qEnd, char strand,
-         int tStart, int tEnd, int numMatches, int allignLen, int quality);
+         int tStart, int tEnd, int allignLen);
 
     string getNeighbour(string sequenceName);
 };

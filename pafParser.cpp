@@ -6,6 +6,7 @@
 #include <regex>
 #include "Global.h"
 #include "Graph.h"
+#include "fasta/reader.h"
 
 using namespace std;
 
@@ -32,21 +33,19 @@ Type getSequenceTypeFromName(string name)
 // fake to string for edge, for testing purposes
 ostream &operator<<(std::ostream &strm, const Edge &e)
 {
-    return strm << "Edge(" << e.querySequence->id << ", " << e.queryStart << ", "
-                << e.queryEnd << ", " << e.relativeStrand << ", " << e.targetSequence->id
+    return strm << "Edge(" << e.querySequenceName << ", " << e.queryStart << ", "
+                << e.queryEnd << ", " << e.relativeStrand << ", " << e.targetSequenceName
                 << ", " << e.targetStart << ", " << e.targetEnd << ", "
-                << e.alignmentBlockLengt << ", "
+                << e.alignmentBlockLength << ", "
                 << ")";
 }
 
-// add multiple files
-// overlaps reads-reads and overlaps contig-reads
-Graph readPafFile(vector<string> filenames)
+Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenames)
 {
     Graph graph = Graph();
     ifstream inFile;
 
-    for (auto file : filenames)
+    for (auto file : pafFilenames)
     {
 
         inFile.open(file);
@@ -94,8 +93,7 @@ Graph readPafFile(vector<string> filenames)
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName + COMPLEMENT_SUFFIX, startQueryIndex,
                     endQUeryIndex, relativeStrand, startTargetIndexHelper,
-                    endTargetIndexHepler, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                    stoi(spllitedLine[11]));
+                    endTargetIndexHepler, stoi(spllitedLine[10]));
 
                 queryNodes.first->addOverlap(edge1);
                 targetNodes.second->addOverlap(edge1);
@@ -106,8 +104,7 @@ Graph readPafFile(vector<string> filenames)
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName, startQueryIndexHelper,
                     endQueryIndexHepler, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                    stoi(spllitedLine[11]));
+                    endTargetIndex, stoi(spllitedLine[10]));
 
                 queryNodes.second->addOverlap(edge2);
                 targetNodes.first->addOverlap(edge2);
@@ -118,8 +115,7 @@ Graph readPafFile(vector<string> filenames)
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName, startQueryIndex,
                     endQUeryIndex, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                    stoi(spllitedLine[11]));
+                    endTargetIndex, stoi(spllitedLine[10]));
 
                 queryNodes.first->addOverlap(edge1);
                 targetNodes.first->addOverlap(edge1);
@@ -128,8 +124,7 @@ Graph readPafFile(vector<string> filenames)
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
                     querySequenceLength - 1 - endQUeryIndex, querySequenceLength - 1 - startQueryIndex,
                     relativeStrand, targetSequenceLength - 1 - endTargetIndex, targetSequenceLength - 1 - startTargetIndex,
-                    stoi(spllitedLine[9]), stoi(spllitedLine[10]),
-                    stoi(spllitedLine[11]));
+                    stoi(spllitedLine[10]));
 
                 queryNodes.second->addOverlap(edge2);
                 targetNodes.second->addOverlap(edge2);
@@ -137,114 +132,34 @@ Graph readPafFile(vector<string> filenames)
         }
         inFile.close();
     }
+
+    auto sequenceReads = FASTAReader::read(fastaFilenames.first);
+    auto sequenceContigs = FASTAReader::read(fastaFilenames.second);
+    sequenceReads.insert(sequenceReads.end(), sequenceContigs.begin(), sequenceContigs.end());
+
+    graph.addSequences(sequenceReads);
+
     return graph;
 }
 
-// Node *greedySearch(Node *start, Node *goal, Graph *g)
-// {
+int main(int argc, char const *argv[])
+{
 
-//     string firstKey = start->key;
+    vector<string> pafFileNames{"read-read.paf", "contig-read.paf"};
+    pair<string, string> fastaFileNames{"readings.fasta", "contigs.fasta"};
+    // vector<string> fileNames{"overlaps1.paf", "overlaps2.paf"};
 
-//     Node *previous = start;
+    Graph g = readPafFile(pafFileNames, fastaFileNames);
 
-//     // change to std::unordered_set if only keys need to be stored
-//     // both unordered set and map have constant time complexity for
-//     // search, insertion and removal
-//     unordered_map<string, float> closed;
+    cout << "num nodes: " << g.nodes.size() << endl;
+    cout << "num contigs: " << g.contigs.size() << endl << endl;
 
-//     while (start != nullptr)
-//     {
-//         // neither regular nor complement can be used again
-//         closed[start->id] == start->quality;
-//         closed[start->id + COMPLEMENT_SUFFIX] == start->quality;
 
-//         // cout << "START " << start->key << " " << start->quality << endl;
+    for (auto node : g.nodes)
+    {
+        cout << node.first << endl;
+        cout << node.second->sequence << endl;
+    }
 
-//         // possible to move check to successor iteration?
-//         // risk of overlap of lower quality?
-//         if (start->id == goal->id)
-//         {
-//             return start;
-//         }
-
-//         // skip contig
-//         if (start->type == Type::CONTIG && start->key != firstKey)
-//         {
-//             start = previous;
-//             previous = start->previous;
-//             continue;
-//         }
-
-//         // quality always greather then one
-//         // cant set quality and key to first succesor
-//         // because it is possible that that node is already
-//         // wisited
-//         float maxQuality = -1;
-//         string key = "";
-
-//         // find next by finding best overlap
-//         for (auto overlap : start->overlaps)
-//         {
-//             // should use other mesure, proper one defined in hera paper
-//             float quality = overlap->alignmentBlockLengt;
-//             string tempKey = overlap->getNeighbour(start->key);
-
-//             // best mapping and not opened before
-//             if (quality > maxQuality && closed.find(tempKey) == closed.end())
-//             {
-//                 maxQuality = quality;
-//                 key = tempKey;
-//             }
-//         }
-
-//         // no next node found, need to back-track
-//         if (key == "")
-//         {
-//             start = previous;
-//             previous = start->previous;
-//         }
-//         else
-//         {
-//             previous = start;
-//             start = g->getNode(key);
-//             start->quality = maxQuality;
-//             start->previous = previous;
-//         }
-//     }
-//     return nullptr;
-// }
-
-// int main(int argc, char const *argv[])
-// {
-//     vector<string> fileNames{"read-read.paf", "contig-read.paf"};
-//     // vector<string> fileNames{"overlaps1.paf", "overlaps2.paf"};
-
-//     cout << "start" << endl;
-
-//     Graph g = readPafFile(fileNames);
-
-//     cout << "end" << endl;
-
-//     cout << "num nodes: " << g.nodes.size() << endl;
-//     cout << "num contigs: " << g.contigs.size() << endl;
-
-//     // check if ctg0 exists in file you are testing
-//     auto res = greedySearch(g.getContig("ctg0"), g.getContig("ctg1"), &g);
-
-//     cout << endl;
-
-//     cout << res->key << endl;
-
-//     if (res->previous != nullptr)
-//     {
-//         auto next = res->previous;
-
-//         while (next != nullptr)
-//         {
-//             cout << next->key << endl;
-//             next = next->previous;
-//         }
-//     }
-
-//     return 0;
-// }
+    return 0;
+}
