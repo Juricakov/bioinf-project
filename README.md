@@ -9,11 +9,6 @@ ako je sekvenca duga 100 i match je sa -,u pafu pise od 10 do 85 onda kada se na
 reverzni komplement matching sekvenca je od 15 do 90
 dal se i contigi mogu reverzat
 
-## algoritam
-
-provjeri dal sva tri algoritma, provjeri backtracking, dodaj da ne smije ici preko drugih contiga, dodaj pravu procjenu kvalitete iz algoritma
-
-## put
-
-zaboravio sam stavit provjeru za kontige putem pa sam dobio put od ctg1 do ctg3 preko ctg2, mozda je to cijela sekvenca,
-cini se da postoje putevi izmedu svih sekvenca
+## problem sa provjerom dal extenda
+edge izmedu r1 i r2 je jednak u r1 i u r2, tako da ispada da se i iz r1 moze extendat u r2 i iz r2 extednat u r1 i onda se vrtimo u krug
+dodano dupliciranje edgeva, vjerojatno ce trebat mijenjat
