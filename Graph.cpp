@@ -89,8 +89,8 @@ void Graph::addSequences(vector<shared_ptr<NamedSequnce>> sequences){
         
         if (node == nullptr){
             // is it possible that no edges were found for read/contig?
-            // todo check and change exception
-            throw runtime_error("should not be nullptr");
+            // happens in e coli test data
+            continue;
         }
         
         Node* complement = node->complement;

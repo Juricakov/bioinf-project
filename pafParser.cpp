@@ -4,13 +4,12 @@
 #include <unordered_map>
 #include <fstream>
 #include <regex>
-#include "Global.h"
-#include "Graph.h"
+#include "pafParser.h"
 #include "fasta/reader.h"
 
 using namespace std;
 
-vector<string> split(const string str, const string regex_str)
+vector<string> PafParser::split(const string str, const string regex_str)
 {
     regex reg(regex_str);
     vector<string> list(sregex_token_iterator(str.begin(), str.end(), reg, -1),
@@ -18,7 +17,7 @@ vector<string> split(const string str, const string regex_str)
     return list;
 }
 
-Type getSequenceTypeFromName(string name)
+Type PafParser::getSequenceTypeFromName(string name)
 {
     // contigs start with ctg or Ctg maybe CTG
     // checked in test data
@@ -30,17 +29,7 @@ Type getSequenceTypeFromName(string name)
     return Type::READ;
 }
 
-// fake to string for edge, for testing purposes
-ostream &operator<<(std::ostream &strm, const Edge &e)
-{
-    return strm << "Edge(" << e.querySequenceName << ", " << e.queryStart << ", "
-                << e.queryEnd << ", " << e.relativeStrand << ", " << e.targetSequenceName
-                << ", " << e.targetStart << ", " << e.targetEnd << ", "
-                << e.alignmentBlockLength << ", "
-                << ")";
-}
-
-Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenames)
+Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenames)
 {
     Graph graph = Graph();
     ifstream inFile;
@@ -57,7 +46,7 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
         while (getline(inFile, ln))
         {
             // space for test files
-            vector<string> spllitedLine = split(ln, " ");
+            vector<string> spllitedLine = split(ln, "\t");
 
             string querySequenceName = spllitedLine[0];
             int querySequenceLength = stoi(spllitedLine[1]);
@@ -87,8 +76,8 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
             // add edges beetwen regular and complement
             if (relativeStrand == '-')
             {
-                int startTargetIndexHelper = targetSequenceLength - 1 - endTargetIndex;
-                int endTargetIndexHepler = targetSequenceLength - 1 - startTargetIndex;
+                int startTargetIndexHelper = targetSequenceLength - endTargetIndex;
+                int endTargetIndexHepler = targetSequenceLength - startTargetIndex;
 
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName + COMPLEMENT_SUFFIX, startQueryIndex,
@@ -96,10 +85,10 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
                     endTargetIndexHepler, stoi(spllitedLine[10]));
 
                 queryNodes.first->addOverlap(edge1);
-                targetNodes.second->addOverlap(edge1);
+                targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
 
-                int startQueryIndexHelper = querySequenceLength - 1 - endQUeryIndex;
-                int endQueryIndexHepler = querySequenceLength - 1 - startQueryIndex;
+                int startQueryIndexHelper = querySequenceLength - endQUeryIndex;
+                int endQueryIndexHepler = querySequenceLength - startQueryIndex;
 
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName, startQueryIndexHelper,
@@ -107,7 +96,7 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
                     endTargetIndex, stoi(spllitedLine[10]));
 
                 queryNodes.second->addOverlap(edge2);
-                targetNodes.first->addOverlap(edge2);
+                targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
             }
             // no index reversing, add edges beetwen regulars
             else
@@ -118,16 +107,16 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
                     endTargetIndex, stoi(spllitedLine[10]));
 
                 queryNodes.first->addOverlap(edge1);
-                targetNodes.first->addOverlap(edge1);
+                targetNodes.first->addOverlap(edge1->flipQueryAndTarget());
 
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
-                    querySequenceLength - 1 - endQUeryIndex, querySequenceLength - 1 - startQueryIndex,
-                    relativeStrand, targetSequenceLength - 1 - endTargetIndex, targetSequenceLength - 1 - startTargetIndex,
+                    querySequenceLength - endQUeryIndex, querySequenceLength - startQueryIndex,
+                    relativeStrand, targetSequenceLength - endTargetIndex, targetSequenceLength - startTargetIndex,
                     stoi(spllitedLine[10]));
 
                 queryNodes.second->addOverlap(edge2);
-                targetNodes.second->addOverlap(edge2);
+                targetNodes.second->addOverlap(edge2->flipQueryAndTarget());
             }
         }
         inFile.close();
@@ -140,26 +129,4 @@ Graph readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenam
     graph.addSequences(sequenceReads);
 
     return graph;
-}
-
-int main(int argc, char const *argv[])
-{
-
-    vector<string> pafFileNames{"read-read.paf", "contig-read.paf"};
-    pair<string, string> fastaFileNames{"readings.fasta", "contigs.fasta"};
-    // vector<string> fileNames{"overlaps1.paf", "overlaps2.paf"};
-
-    Graph g = readPafFile(pafFileNames, fastaFileNames);
-
-    cout << "num nodes: " << g.nodes.size() << endl;
-    cout << "num contigs: " << g.contigs.size() << endl << endl;
-
-
-    for (auto node : g.nodes)
-    {
-        cout << node.first << endl;
-        cout << node.second->sequence << endl;
-    }
-
-    return 0;
 }

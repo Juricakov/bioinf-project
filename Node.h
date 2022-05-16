@@ -1,10 +1,10 @@
+#pragma once
 #include <string>
 #include <vector>
 #include "Global.h"
 #include "Edge.h"
 
 using namespace std;
-// TODO Grigor add sequences
 
 // nodes represent reads
 // in hera paper complementary nodes are also connected, should not be possible to use
