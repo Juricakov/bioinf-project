@@ -1,16 +1,21 @@
-#include "Node.h"
-#include "Edge.h"
+#pragma once
+#include "../Node.h"
+#include "../Edge.h"
 #include "vector"
 #include <unordered_map>
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
 
 class Heuristic
 {
 protected:
     std::vector<Edge *> edges;
+    std::unordered_map<string, Node *> lookup;
+
     Heuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup)
     {
+        this->lookup = lookup;
         std::copy_if(edges.begin(), edges.end(), std::back_inserter(this->edges), [lookup, this](Edge *e)
                      { return this->extends(e, lookup); });
     }
@@ -47,4 +52,5 @@ private:
 public:
     virtual Edge *getNext() = 0;
     virtual bool hasNext() = 0;
+    virtual Heuristic *createNextHeuristic(std::vector<Edge *> edges) = 0;
 };

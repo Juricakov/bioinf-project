@@ -1,35 +1,36 @@
-#include "heuristic.h"
+#include "overlapScore.h"
+#include <iostream>
 
-class OverlapScoreHeuristic : Heuristic
+int OverlapScoreHeuristic::getOverlapLength(Edge *edge)
 {
-private:
-    int currentIndex;
-    static int getOverlapLength(Edge *edge)
-    {
-        return edge->queryEnd - edge->queryStart;
-    };
-
-    static bool compare(Edge *a, Edge *b)
-    {
-        // have to return true if first argument is less than  second
-        return getOverlapLength(a) < getOverlapLength(b);
-    }
-
-public:
-    OverlapScoreHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
-    {
-        std::sort(this->edges.begin(), this->edges.end(), OverlapScoreHeuristic::compare);
-        this->currentIndex = 0;
-    }
-
-    bool hasNext() { return this->currentIndex < this->edges.size(); };
-    Edge *getNext()
-    {
-        if (!this->hasNext())
-        {
-            throw std::runtime_error("Overlap Score Heuristic has no more elements");
-        }
-
-        return this->edges[this->currentIndex++];
-    };
+    return edge->queryEnd - edge->queryStart;
 };
+
+bool OverlapScoreHeuristic::compare(Edge *a, Edge *b)
+{
+    // have to return true if first argument is less than second    
+    // question from g: why, reverse works better on small example    
+    return getOverlapLength(a) > getOverlapLength(b);
+}
+
+OverlapScoreHeuristic::OverlapScoreHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
+{
+    std::sort(this->edges.begin(), this->edges.end(), OverlapScoreHeuristic::compare);
+    this->currentIndex = 0;
+}
+
+bool OverlapScoreHeuristic::hasNext() { return this->currentIndex < this->edges.size(); };
+
+Edge *OverlapScoreHeuristic::getNext()
+{
+    if (!this->hasNext())
+    {
+        throw std::runtime_error("Overlap Score Heuristic has no more elements");
+    }
+    return this->edges[this->currentIndex++];
+}
+
+Heuristic *OverlapScoreHeuristic::createNextHeuristic(std::vector<Edge *> edges)
+{
+    return new OverlapScoreHeuristic(edges, this->lookup);
+}
