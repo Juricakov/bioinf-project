@@ -19,12 +19,22 @@ void Path::push(Edge *edge)
 
 Node *Path::getStart(std::unordered_map<string, Node *> lookup)
 {
-    return lookup[this->path.front()->querySequenceName];
+    return lookup[this->getStartNodeName()];
+}
+
+std::string Path::getStartNodeName()
+{
+    return this->path.front()->querySequenceName;
 }
 
 Node *Path::getEnd(std::unordered_map<string, Node *> lookup)
 {
-    return lookup[this->path.back()->targetSequenceName];
+    return lookup[this->getEndNodeName()];
+}
+
+std::string Path::getEndNodeName()
+{
+    return this->path.back()->targetSequenceName;
 }
 
 int Path::size()
