@@ -57,7 +57,7 @@ std::pair<Path *, int> getGroupConsensusPathAndValidPathNumber(std::vector<Path>
         return std::pair<Path *, int>(nullptr, 0);
     }
 
-    // discard the sorter paths
+    // discard the shorter paths
     std::vector<Path> options;
     std::copy_if(bucket.begin(), bucket.end(), std::back_inserter(options), [pathLengthsById, maxLen](Path p)
                  { return pathLengthsById.at(p.getId()) > maxLen / 2; });
