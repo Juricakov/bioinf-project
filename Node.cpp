@@ -32,3 +32,15 @@ bool Node::isComplement()
 {
     return !(this->key == this->id);
 }
+
+vector<Edge *> Node::getOverlaps()
+{
+    vector<Edge *> v;
+
+    for (auto it = this->overlaps.begin(); it != this->overlaps.end(); ++it)
+    {
+        v.push_back(it->second);
+    }
+
+    return v;
+}

@@ -5,7 +5,9 @@
 #include "pathGenerator.h"
 #include "sequenceGenerator.h"
 #include "pafParser.h"
-#include <map>
+#include "pathMerger.h"
+
+int Path::current_id = 0;
 
 int main()
 {
@@ -41,42 +43,73 @@ int main()
     // it should not happen that multiple paths end in the same node (probability)
     // not possible to have multiple paths starting from the same node
 
-    PathSelector selector;
+    SequenceGenerator generator;
+    PathSelector selector(generator);
 
-    vector<Path *> allPaths;
-
-    // duplicate entries in paf file for read read ????????
-    // set does not solve somehow
+    vector<Path*> allPaths;
 
     for (auto contig : g.contigs)
     {
-        // todo add same for mc
 
-        // Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->overlaps, g.nodes);
-        // auto pathsExtension = PathGenerator::generate(contg.second, hExtension, g.nodes);
+        cout << contig.first << endl;
 
-        // Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->overlaps, g.nodes);
-        // auto pathsOverlap = PathGenerator::generate(contig.second, hOverlap, g.nodes);
+        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        auto pathsExtension = PathGenerator::generate(contig.second, hExtension, g.nodes);
 
-        // only test, remove
-        if (contig.first != "ctg1")
+        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        auto pathsOverlap = PathGenerator::generate(contig.second, hOverlap, g.nodes);
+
+        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps(), g.nodes);
+        auto pathsMonteCarlo = PathGenerator::generate(contig.second, hMonteCarlo, g.nodes);
+
+        vector<Path> pathsOneNode;
+
+        for (int i = 0; i < max({pathsExtension.size(), pathsOverlap.size(), pathsMonteCarlo.size()}); i++)
+        {
+            if (i < pathsExtension.size())
+            {
+                pathsOneNode.push_back(*pathsExtension.at(i));
+            }
+
+            if (i < pathsOverlap.size())
+            {
+                pathsOneNode.push_back(*pathsOverlap.at(i));
+            }
+
+            if (i < pathsMonteCarlo.size())
+            {
+                pathsOneNode.push_back(*pathsMonteCarlo.at(i));
+            }
+        }
+
+        if (pathsOneNode.empty())
         {
             continue;
         }
 
-        vector<Edge*> v;
-        for (auto it = contig.second->overlaps.begin(); it != contig.second->overlaps.end(); ++it)
-        {
-            v.push_back(it->second);
-        }
+        // cout << pathsOneNode.at(0).size() << endl;
+        // auto newPath = selector.pick(pathsOneNode, g.nodes);
+        // cout << newPath.size() << endl;
 
-        Heuristic *hMonteCarlo = new MonteCarloHeuristic(v, g.nodes);
-        auto pathsMonteCarlo = PathGenerator::generate(contig.second, hMonteCarlo, g.nodes);
-
-        // allPaths.push_back(selector.pick(pathsMonteCarlo));
+        // allPaths.push_back(&newPath);
     }
 
-    // writing is currently done in command line with a > res.txt, will change after testing
-    // cout << SequenceGenerator::generate(wholePath, g.nodes);
+
+    // cout << "all paths " << allPaths.size() << endl;
+    
+    // if (allPaths.at(0) == nullptr){
+    //     cout << "null";
+    // }
+    
+    // cout << allPaths.at(0)->size() << endl;
+
+    // auto finalPath = PathMerger::merge(allPaths, g.nodes);
+
+    // cout << "a" << endl;
+    // cout << finalPath->size();
+    // auto finalSequence = generator.generate(finalPath, g.nodes);
+
+    // cout << finalSequence.size();
+
     return 0;
 }

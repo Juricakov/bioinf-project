@@ -38,4 +38,6 @@ public:
     void addOverlap(Edge *overlap);
 
     bool isComplement();
+
+    vector<Edge *> getOverlaps();
 };

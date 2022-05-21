@@ -1,3 +1,4 @@
+#pragma once
 #include "path.h"
 #include <vector>
 #include <string>
