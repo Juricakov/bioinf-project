@@ -40,7 +40,7 @@ inline bool file_exists(const std::string &name)
     return (stat(name.c_str(), &buffer) == 0);
 }
 
-std::vector<std::shared_ptr<NamedSequnce>> FASTAReader::read(std::string path)
+std::vector<std::shared_ptr<NamedSequnce>> FASTQReader::read(std::string path)
 {
     if (!file_exists(path))
     {
@@ -56,9 +56,16 @@ std::vector<std::shared_ptr<NamedSequnce>> FASTAReader::read(std::string path)
 
     std::vector<std::shared_ptr<NamedSequnce>> readings;
     std::string line, name, sequence;
+    bool skipNext = false;
 
     while (std::getline(file, line))
     {
+        if (skipNext)
+        {
+            skipNext = false;
+            continue;
+        }
+
         line = trim(line);
 
         if (startsWith(line, ";") || (line.length() == 0)) // comment or empty
@@ -66,7 +73,13 @@ std::vector<std::shared_ptr<NamedSequnce>> FASTAReader::read(std::string path)
             continue;
         }
 
-        if (!startsWith(line, ">"))
+        if (startsWith(line, "+")) // separator for quality, wont load next line which contains quality info
+        {
+            skipNext = true;
+            continue;
+        }
+
+        if (!startsWith(line, "@"))
         {
             sequence += line;
             continue;

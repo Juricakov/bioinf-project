@@ -3,10 +3,10 @@
 #include <memory>
 #include "../namedSequence.h"
 
-class FASTAReader
+class FASTQReader
 {
 private:
-    FASTAReader();
+    FASTQReader();
 
 public:
     static std::vector<std::shared_ptr<NamedSequnce>> read(std::string path);
