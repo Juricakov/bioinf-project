@@ -61,6 +61,11 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
             string targetSequenceName = spllitedLine[5];
             int targetSequenceLength = stoi(spllitedLine[6]);
 
+            // somehow happens in read-read paf file
+            if (targetSequenceName == querySequenceName){
+                continue;
+            }
+
             pair<Node *, Node *> targetNodes = graph.getOrInitialize(
                 targetSequenceName,
                 targetSequenceLength,

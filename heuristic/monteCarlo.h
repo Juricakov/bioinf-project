@@ -22,7 +22,6 @@ private:
     */
 
     std::vector<float> probabilities;
-    int newEdgesProvided = 0;
 
 public:
     MonteCarloHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup);

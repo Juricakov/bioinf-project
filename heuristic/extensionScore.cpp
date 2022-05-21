@@ -49,12 +49,6 @@ ExtensionScoreHeuristic::ExtensionScoreHeuristic(std::vector<Edge *> edges, std:
 
 bool ExtensionScoreHeuristic::hasNext()
 {
-    // todo ????????????
-    // if (currentIndex > 5)
-    // {
-    //     return false;
-    // }
-
     return this->currentIndex < this->edges.size();
 };
 

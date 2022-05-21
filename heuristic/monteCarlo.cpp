@@ -27,13 +27,6 @@ int MonteCarloHeuristic::getExtensionLength(Edge *edge, std::unordered_map<strin
 
 MonteCarloHeuristic::MonteCarloHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
 {
-    // sort this->edges because they are filtered in parent constructor
-    std::sort(this->edges.begin(), this->edges.end(), ExtensionScoreSorter(lookup));
-    edges = this->edges;
-    this->edges.clear();
-
-    std::copy(edges.begin(), edges.begin() + 5, std::back_inserter(this->edges));
-
     std::vector<int> extensionLengths;
     std::transform(this->edges.begin(), this->edges.end(), std::back_inserter(extensionLengths), [lookup](Edge *e) -> int
                    { return getExtensionLength(e, lookup); });
@@ -42,7 +35,7 @@ MonteCarloHeuristic::MonteCarloHeuristic(std::vector<Edge *> edges, std::unorder
     this->probabilities.push_back(0);
     for (int i = 0; i < this->edges.size(); i++)
     {
-        int range = extensionLengths[i] / extensionSum; // probability will be proportional to extension length
+        float range = (float)extensionLengths[i] / extensionSum; // probability will be proportional to extension length
         this->probabilities.push_back(this->probabilities.at(i) + range);
     }
 }
@@ -62,7 +55,6 @@ Edge *MonteCarloHeuristic::getNext()
             return this->edges[i];
         }
     }
-
     // rounding error caused code to get to this point, should have returned final element.
     return this->edges.at(this->edges.size() - 1);
 }

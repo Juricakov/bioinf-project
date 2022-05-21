@@ -25,7 +25,7 @@ Node::Node(Type t, string name, int len, Node *c, bool isCompl)
 
 void Node::addOverlap(Edge *overlap)
 {
-    this->overlaps.push_back(overlap);
+    this->overlaps[overlap->targetSequenceName] = overlap;
 }
 
 bool Node::isComplement()

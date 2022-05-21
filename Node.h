@@ -3,6 +3,7 @@
 #include <vector>
 #include "Global.h"
 #include "Edge.h"
+#include <unordered_map>
 
 using namespace std;
 
@@ -23,7 +24,7 @@ public:
     string key;
 
     int length;
-    vector<Edge *> overlaps;
+    unordered_map<string, Edge *> overlaps;
     Node *complement = nullptr;
 
     Node(){};

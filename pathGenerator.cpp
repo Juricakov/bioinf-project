@@ -8,41 +8,37 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 {
     vector<Path *> allGeneratedPaths;
 
-    while (heuristic->hasNext())
+    for (int i = 0; i < 2 && heuristic->hasNext(); i++)
     {
+        cout << "NEW PATH" << endl;
         Path *path = new Path;
         auto overlap = heuristic->getNext();
         path->push(overlap);
         auto nextNode = lookup.at(overlap->getNeighbour(from->key));
-        if (find(nextNode, heuristic->createNextHeuristic(nextNode->overlaps), lookup, path))
+
+        vector<Edge *> v;
+
+        for (auto it = nextNode->overlaps.begin(); it != nextNode->overlaps.end(); ++it)
+        {
+            v.push_back(it->second);
+        }
+
+        if (find(nextNode, heuristic->createNextHeuristic(v), lookup, path))
         {
             allGeneratedPaths.push_back(path);
+        }
+        else
+        {
+            cout << "NO PATH FOUND " << endl;
         }
     }
 
     return allGeneratedPaths;
 }
 
-// fake to string for edge, for testing purposes
-ostream &operator<<(std::ostream &strm, const Edge &e)
-{
-    return strm << "Edge(" << e.querySequenceName << ", " << e.queryStart << ", "
-                << e.queryEnd << ", " << e.relativeStrand << ", " << e.targetSequenceName
-                << ", " << e.targetStart << ", " << e.targetEnd << ", "
-                << e.alignmentBlockLength << ")";
-}
-
 bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path)
 {
-    // checking all possible overlaps, maybe too slow/too much work, determine after testing
-    // possible to set hasNext() to false after some number of fetches (eg. after 5 getNext return no next)
-
-    // if (path->size() % 10 == 0)
-    // {
-    //     cout << path->size() << endl;
-    // }
-
-    while (heuristic->hasNext())
+    for (int i = 0; i < 50 && heuristic->hasNext(); i++)
     {
         Edge *bestOverlap = heuristic->getNext();
         path->push(bestOverlap);
@@ -55,17 +51,21 @@ bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string,
             return true;
         }
 
-        auto nextHeuristic = heuristic->createNextHeuristic(nextNode->overlaps);
+        vector<Edge *> v;
+
+        for (auto it = nextNode->overlaps.begin(); it != nextNode->overlaps.end(); ++it)
+        {
+            v.push_back(it->second);
+        }
+
+        auto nextHeuristic = heuristic->createNextHeuristic(v);
 
         if (find(nextNode, nextHeuristic, lookup, path))
         {
             return true;
         };
 
-        if (path->isDeadEnd(lookup))
-        {
-            path->pop();
-        }
+        path->pop();
     }
     return false;
 }
