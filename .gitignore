@@ -5,3 +5,5 @@
 *.fasta
 *.fastq
 *.paf
+*.out
+*.sh

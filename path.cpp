@@ -34,6 +34,7 @@ Node *Path::getEnd(std::unordered_map<string, Node *> lookup)
 
 std::string Path::getEndNodeName()
 {
+    std::cout << "endnodename" << std::endl;
     return this->path.back()->targetSequenceName;
 }
 

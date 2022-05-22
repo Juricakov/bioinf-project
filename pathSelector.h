@@ -27,5 +27,5 @@ public:
         PathSelector(sequenceGenerator, defaultBucketWindowSize, defaultMaxSingleBucketLenRange);
     }
 
-    Path *pick(std::vector<Path> paths, std::unordered_map<string, Node *> lookup);
+    Path *pick(std::vector<Path *> paths, std::unordered_map<string, Node *> lookup);
 };

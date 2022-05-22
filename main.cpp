@@ -46,39 +46,39 @@ int main()
     SequenceGenerator generator;
     PathSelector selector(generator);
 
-    vector<Path*> allPaths;
+    vector<Path *> allPaths;
 
     for (auto contig : g.contigs)
     {
 
         cout << contig.first << endl;
 
-        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps());
         auto pathsExtension = PathGenerator::generate(contig.second, hExtension, g.nodes);
 
-        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps());
         auto pathsOverlap = PathGenerator::generate(contig.second, hOverlap, g.nodes);
 
-        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps(), g.nodes);
+        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps());
         auto pathsMonteCarlo = PathGenerator::generate(contig.second, hMonteCarlo, g.nodes);
 
-        vector<Path> pathsOneNode;
+        vector<Path *> pathsOneNode;
 
         for (int i = 0; i < max({pathsExtension.size(), pathsOverlap.size(), pathsMonteCarlo.size()}); i++)
         {
             if (i < pathsExtension.size())
             {
-                pathsOneNode.push_back(*pathsExtension.at(i));
+                pathsOneNode.push_back(pathsExtension.at(i));
             }
 
             if (i < pathsOverlap.size())
             {
-                pathsOneNode.push_back(*pathsOverlap.at(i));
+                pathsOneNode.push_back(pathsOverlap.at(i));
             }
 
             if (i < pathsMonteCarlo.size())
             {
-                pathsOneNode.push_back(*pathsMonteCarlo.at(i));
+                pathsOneNode.push_back(pathsMonteCarlo.at(i));
             }
         }
 
@@ -87,29 +87,22 @@ int main()
             continue;
         }
 
-        // cout << pathsOneNode.at(0).size() << endl;
-        // auto newPath = selector.pick(pathsOneNode, g.nodes);
-        // cout << newPath.size() << endl;
-
-        // allPaths.push_back(&newPath);
+        allPaths.push_back(selector.pick(pathsOneNode, g.nodes));
     }
 
+    cout << "all paths" << endl;
 
-    // cout << "all paths " << allPaths.size() << endl;
-    
-    // if (allPaths.at(0) == nullptr){
-    //     cout << "null";
-    // }
-    
-    // cout << allPaths.at(0)->size() << endl;
+    for (auto path : allPaths)
+    {
+        cout << path->getId() << " from " << path->getStartNodeName() << " to " << path->getEndNodeName() << endl;
+    }
 
-    // auto finalPath = PathMerger::merge(allPaths, g.nodes);
+    auto finalPath = PathMerger::merge(allPaths, g.nodes);
 
-    // cout << "a" << endl;
-    // cout << finalPath->size();
-    // auto finalSequence = generator.generate(finalPath, g.nodes);
-
-    // cout << finalSequence.size();
+    cout << "a" << endl;
+    cout << finalPath->size();
+    auto finalSequence = generator.generate(finalPath, g.nodes);
+    cout << finalSequence.size();
 
     return 0;
 }
