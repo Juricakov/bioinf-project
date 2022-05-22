@@ -8,26 +8,21 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 {
     vector<Path *> allGeneratedPaths;
 
-    if (!heuristic->hasNext())
+    for (int i = 0; i < 5 && heuristic->hasNext(); i++)
     {
-        cout << "No extension" << endl;
-    }
-
-    for (int i = 0; i < 2 && heuristic->hasNext(); i++)
-    {
-        cout << "NEW PATH" << endl;
+        // cout << "NEW PATH" << endl;
         Path *path = new Path;
+
+        // cout << "before get next" << endl;
         auto overlap = heuristic->getNext();
+        // cout << "after get next" << endl;
+
         path->push(overlap);
         auto nextNode = lookup.at(overlap->getNeighbour(from->key));
 
         if (find(nextNode, heuristic->createNextHeuristic(nextNode->getOverlaps()), lookup, path))
         {
             allGeneratedPaths.push_back(path);
-        }
-        else
-        {
-            cout << "NO PATH FOUND " << endl;
         }
     }
 
@@ -36,12 +31,20 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 
 bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path)
 {
-    for (int i = 0; i < 50 && heuristic->hasNext(); i++)
+    // cout << "start find" << endl;
+
+    for (int i = 0; i < 5 && heuristic->hasNext(); i++)
     {
         Edge *bestOverlap = heuristic->getNext();
         path->push(bestOverlap);
 
         auto nextNode = lookup.at(bestOverlap->getNeighbour(from->key));
+
+        // if (path->size() % 10 == 0)
+        // {
+        //     cout << "still alive " << path->size() << endl;
+        //     cout << nextNode->key << endl;
+        // }
 
         if (nextNode->type == Type::CONTIG)
         {

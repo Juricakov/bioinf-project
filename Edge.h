@@ -21,12 +21,15 @@ public:
     int targetStart;
     int targetEnd;
 
+    int querySeqeunceLength;
+    int targetSequenceLength;
+
     int alignmentBlockLength;
 
     Edge();
 
     Edge(string query, string target, int qStart, int qEnd, char strand,
-         int tStart, int tEnd, int allignLen);
+         int tStart, int tEnd, int allignLen, int querySeqeunceLength, int targetSequenceLength);
 
     string getNeighbour(string sequenceName);
 

@@ -1,14 +1,13 @@
 #include "Node.h"
 
-Node::Node(Type t, string name, int len)
+Node::Node(Type t, string name)
 {
     type = t;
     id = name;
     key = name;
-    length = len;
 }
 
-Node::Node(Type t, string name, int len, Node *c, bool isCompl)
+Node::Node(Type t, string name, Node *c, bool isCompl)
 {
     string newKey = name;
     if (isCompl)
@@ -20,7 +19,6 @@ Node::Node(Type t, string name, int len, Node *c, bool isCompl)
     id = name;
     key = newKey;
     complement = c;
-    length = len;
 }
 
 void Node::addOverlap(Edge *overlap)

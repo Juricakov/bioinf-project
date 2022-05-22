@@ -10,7 +10,7 @@ private:
             012 345
     TARGET = [AAA]BBC
     */
-    static int getExtensionLength(Edge *edge, std::unordered_map<string, Node *> lookup);
+    static int getExtensionLength(Edge *edge);
 
     /*
     probabilities[i] is chosen if random number [0, 1] is in range <probabilities[i], probabilities[i + 1]].
@@ -24,7 +24,7 @@ private:
     std::vector<float> probabilities;
 
 public:
-    MonteCarloHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup);
+    MonteCarloHeuristic(std::vector<Edge *> edges);
 
     bool hasNext();
     Edge *getNext();

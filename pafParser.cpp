@@ -6,6 +6,7 @@
 #include <regex>
 #include "pafParser.h"
 #include "fasta/reader.h"
+#include "fastq/reader.h"
 
 using namespace std;
 
@@ -43,39 +44,47 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
 
         cout << file << endl;
 
+        int cnt = 0;
+
         while (getline(inFile, ln))
         {
+            cnt++;
+            if (cnt % 100000 == 0)
+            {
+                cout << "still alive " << cnt << endl;
+            }
+
             // space for test files
             vector<string> spllitedLine = split(ln, "\t");
 
             string querySequenceName = spllitedLine[0];
+
             int querySequenceLength = stoi(spllitedLine[1]);
 
             char relativeStrand = spllitedLine[4][0];
-
-            pair<Node *, Node *> queryNodes = graph.getOrInitialize(
-                querySequenceName,
-                querySequenceLength,
-                getSequenceTypeFromName(querySequenceName));
 
             string targetSequenceName = spllitedLine[5];
             int targetSequenceLength = stoi(spllitedLine[6]);
 
             // somehow happens in read-read paf file
-            if (targetSequenceName == querySequenceName){
+            if (targetSequenceName == querySequenceName)
+            {
                 continue;
             }
 
-            pair<Node *, Node *> targetNodes = graph.getOrInitialize(
-                targetSequenceName,
-                targetSequenceLength,
-                getSequenceTypeFromName(targetSequenceName));
-
             int startQueryIndex = stoi(spllitedLine[2]);
-            int endQUeryIndex = stoi(spllitedLine[3]);
+            int endQueryIndex = stoi(spllitedLine[3]);
 
             int startTargetIndex = stoi(spllitedLine[7]);
             int endTargetIndex = stoi(spllitedLine[8]);
+
+            pair<Node *, Node *> queryNodes = graph.getOrInitialize(
+                querySequenceName,
+                getSequenceTypeFromName(querySequenceName));
+
+            pair<Node *, Node *> targetNodes = graph.getOrInitialize(
+                targetSequenceName,
+                getSequenceTypeFromName(targetSequenceName));
 
             // reverse indexes
             // add edges beetwen regular and complement
@@ -86,52 +95,110 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
 
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName + COMPLEMENT_SUFFIX, startQueryIndex,
-                    endQUeryIndex, relativeStrand, startTargetIndexHelper,
-                    endTargetIndexHepler, stoi(spllitedLine[10]));
+                    endQueryIndex, relativeStrand, startTargetIndexHelper,
+                    endTargetIndexHepler, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                queryNodes.first->addOverlap(edge1);
-                targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
+                // check if extends
+                int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
+                int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
 
-                int startQueryIndexHelper = querySequenceLength - endQUeryIndex;
+                // do not create edge or nodes if overlap does not extend the sequence
+                if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
+                {
+                    queryNodes.first->addOverlap(edge1);
+                }
+                else
+                {
+                    targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
+                }
+
+                int startQueryIndexHelper = querySequenceLength - endQueryIndex;
                 int endQueryIndexHepler = querySequenceLength - startQueryIndex;
 
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName, startQueryIndexHelper,
                     endQueryIndexHepler, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[10]));
+                    endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                queryNodes.second->addOverlap(edge2);
-                targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
+                baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndexHepler;
+                baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
+
+                if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
+                {
+                    queryNodes.second->addOverlap(edge2);
+                }
+                else
+                {
+                    targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
+                }
             }
             // no index reversing, add edges beetwen regulars
             else
             {
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName, startQueryIndex,
-                    endQUeryIndex, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[10]));
+                    endQueryIndex, relativeStrand, startTargetIndex,
+                    endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                queryNodes.first->addOverlap(edge1);
-                targetNodes.first->addOverlap(edge1->flipQueryAndTarget());
+                // check if extends
+                int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
+                int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
+
+                if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
+                {
+                    queryNodes.first->addOverlap(edge1);
+                }
+
+                else
+                {
+                    targetNodes.first->addOverlap(edge1->flipQueryAndTarget());
+                }
 
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
-                    querySequenceLength - endQUeryIndex, querySequenceLength - startQueryIndex,
+                    querySequenceLength - endQueryIndex, querySequenceLength - startQueryIndex,
                     relativeStrand, targetSequenceLength - endTargetIndex, targetSequenceLength - startTargetIndex,
-                    stoi(spllitedLine[10]));
+                    stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                queryNodes.second->addOverlap(edge2);
-                targetNodes.second->addOverlap(edge2->flipQueryAndTarget());
+                // opposite of non complement ones
+
+                if (!baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
+                {
+                    queryNodes.second->addOverlap(edge2);
+                }
+                else
+                {
+                    targetNodes.second->addOverlap(edge2->flipQueryAndTarget());
+                }
             }
         }
         inFile.close();
     }
 
-    auto sequenceReads = FASTAReader::read(fastaFilenames.first);
-    auto sequenceContigs = FASTAReader::read(fastaFilenames.second);
-    sequenceReads.insert(sequenceReads.end(), sequenceContigs.begin(), sequenceContigs.end());
+    vector<shared_ptr<NamedSequnce>> s1;
+    vector<shared_ptr<NamedSequnce>> s2;
 
-    graph.addSequences(sequenceReads);
+    if (fastaFilenames.first.find("fastq") != string::npos)
+    {
+        cout << "fastq" << endl;
+        s1 = FASTQReader::read(fastaFilenames.first);
+    }
+    else
+    {
+        s1 = FASTAReader::read(fastaFilenames.first);
+    }
 
+    if (fastaFilenames.second.find("fastq") != string::npos)
+    {
+        cout << "fastq" << endl;
+        s2 = FASTQReader::read(fastaFilenames.second);
+    }
+    else
+    {
+        s2 = FASTAReader::read(fastaFilenames.second);
+    }
+
+    s1.insert(s1.end(), s2.begin(), s2.end());
+    graph.addSequences(s1);
     return graph;
 }

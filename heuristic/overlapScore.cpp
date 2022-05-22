@@ -13,7 +13,7 @@ bool OverlapScoreHeuristic::compare(Edge *a, Edge *b)
     return getOverlapLength(a) > getOverlapLength(b);
 }
 
-OverlapScoreHeuristic::OverlapScoreHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
+OverlapScoreHeuristic::OverlapScoreHeuristic(std::vector<Edge *> edges) : Heuristic(edges)
 {
     std::sort(this->edges.begin(), this->edges.end(), OverlapScoreHeuristic::compare);
     this->currentIndex = 0;
@@ -32,5 +32,5 @@ Edge *OverlapScoreHeuristic::getNext()
 
 Heuristic *OverlapScoreHeuristic::createNextHeuristic(std::vector<Edge *> edges)
 {
-    return new OverlapScoreHeuristic(edges, this->lookup);
+    return new OverlapScoreHeuristic(edges);
 }

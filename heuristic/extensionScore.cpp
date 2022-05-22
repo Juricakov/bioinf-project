@@ -1,49 +1,26 @@
 #include "extensionScore.h"
-#include "extensionScoreSorter.h"
 #include <iostream>
 
-int ExtensionScoreHeuristic::getExtensionLength(Edge *edge, Node *queryNode, Node *targetNode)
+int ExtensionScoreHeuristic::getExtensionLength(Edge *edge)
 {
     // ~ len BBC
-    int baseCountAfterOverlapOnQuerySeq = queryNode->sequence.length() - edge->queryEnd;
+    int baseCountAfterOverlapOnQuerySeq = edge->querySeqeunceLength - edge->queryEnd;
     // ~ len G
-    int baseCountAfterOverlapOnTargetSeq = targetNode->sequence.length() - edge->targetEnd;
+    int baseCountAfterOverlapOnTargetSeq = edge->targetSequenceLength - edge->targetEnd;
 
     // Extension length is len(BBC) - len(G);
     return baseCountAfterOverlapOnQuerySeq - baseCountAfterOverlapOnTargetSeq;
 };
 
-bool ExtensionScoreHeuristic::compare(Edge *a, Edge *b, std::unordered_map<string, Node *> lookup)
+bool ExtensionScoreHeuristic::compare(Edge *a, Edge *b)
 {
-    auto queryNodeA = lookup[a->querySequenceName];
-    auto targetNodeA = lookup[a->targetSequenceName];
-    auto queryNodeB = lookup[b->querySequenceName];
-    auto targetNodeB = lookup[b->targetSequenceName];
-
-    if (queryNodeA == nullptr)
-    {
-        throw std::invalid_argument("Missing query node A in lookup");
-    }
-    if (targetNodeA == nullptr)
-    {
-        throw std::invalid_argument("Missing target node A in lookup");
-    }
-
-    if (queryNodeB == nullptr)
-    {
-        throw std::invalid_argument("Missing query node B in lookup");
-    }
-    if (targetNodeB == nullptr)
-    {
-        throw std::invalid_argument("Missing target node B in lookup");
-    }
-    // have to return true if first argument is less than  second
-    return getExtensionLength(a, queryNodeA, targetNodeA) < getExtensionLength(b, queryNodeB, targetNodeB);
+    // have to return true if first argument is less than second ??
+    return getExtensionLength(a) < getExtensionLength(b);
 }
 
-ExtensionScoreHeuristic::ExtensionScoreHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
+ExtensionScoreHeuristic::ExtensionScoreHeuristic(std::vector<Edge *> edges) : Heuristic(edges)
 {
-    std::sort(this->edges.begin(), this->edges.end(), ExtensionScoreSorter(lookup));
+    std::sort(this->edges.begin(), this->edges.end(), ExtensionScoreHeuristic::compare);
     this->currentIndex = 0;
 }
 
@@ -63,5 +40,5 @@ Edge *ExtensionScoreHeuristic::getNext()
 
 Heuristic *ExtensionScoreHeuristic::createNextHeuristic(std::vector<Edge *> edges)
 {
-    return new ExtensionScoreHeuristic(edges, this->lookup);
+    return new ExtensionScoreHeuristic(edges);
 }

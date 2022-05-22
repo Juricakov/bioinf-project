@@ -3,7 +3,7 @@
 Edge::Edge(){};
 
 Edge::Edge(string query, string target, int qStart, int qEnd, char strand,
-           int tStart, int tEnd, int allignLen)
+           int tStart, int tEnd, int allignLen, int queryLen, int targetLen)
 {
     querySequenceName = query;
     targetSequenceName = target;
@@ -13,6 +13,8 @@ Edge::Edge(string query, string target, int qStart, int qEnd, char strand,
     targetStart = tStart;
     targetEnd = tEnd;
     alignmentBlockLength = allignLen;
+    querySeqeunceLength = queryLen;
+    targetSequenceLength = targetLen;
 }
 
 string Edge::getNeighbour(string sequenceName)
@@ -33,6 +35,9 @@ Edge * Edge::flipQueryAndTarget(){
     newEdge->targetEnd = queryEnd;
     newEdge->targetStart = queryStart;
     newEdge->targetSequenceName = querySequenceName;
+
+    newEdge->querySeqeunceLength = targetSequenceLength;
+    newEdge->targetSequenceLength = querySeqeunceLength;
 
     return newEdge;
 }

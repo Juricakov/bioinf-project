@@ -1,35 +1,23 @@
 #include <numeric>
 #include <stdlib.h>
 #include "monteCarlo.h"
-#include "extensionScoreSorter.h"
 
-int MonteCarloHeuristic::getExtensionLength(Edge *edge, std::unordered_map<string, Node *> lookup)
+int MonteCarloHeuristic::getExtensionLength(Edge *edge)
 {
-    auto queryNode = lookup[edge->querySequenceName];
-    auto targetNode = lookup[edge->targetSequenceName];
-    if (queryNode == nullptr)
-    {
-        throw std::invalid_argument("Missing query node in lookup");
-    }
-    if (targetNode == nullptr)
-    {
-        throw std::invalid_argument("Missing target node in lookup");
-    }
-
     // ~ len BBC
-    int baseCountAfterOverlapOnQuerySeq = queryNode->sequence.length() - edge->queryEnd - 1;
+    int baseCountAfterOverlapOnQuerySeq = edge->querySeqeunceLength - edge->queryEnd;
     // ~ len G
-    int baseCountAfterOverlapOnTargetSeq = targetNode->sequence.length() - edge->targetEnd - 1;
+    int baseCountAfterOverlapOnTargetSeq = edge->targetSequenceLength - edge->targetEnd;
 
     // Extension length is len(BBC) - len(G);
     return baseCountAfterOverlapOnQuerySeq - baseCountAfterOverlapOnTargetSeq;
 };
 
-MonteCarloHeuristic::MonteCarloHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup) : Heuristic(edges, lookup)
+MonteCarloHeuristic::MonteCarloHeuristic(std::vector<Edge *> edges) : Heuristic(edges)
 {
     std::vector<int> extensionLengths;
-    std::transform(this->edges.begin(), this->edges.end(), std::back_inserter(extensionLengths), [lookup](Edge *e) -> int
-                   { return getExtensionLength(e, lookup); });
+    std::transform(this->edges.begin(), this->edges.end(), std::back_inserter(extensionLengths), [](Edge *e) -> int
+                   { return getExtensionLength(e); });
 
     int extensionSum = std::accumulate(extensionLengths.begin(), extensionLengths.end(), 0);
     this->probabilities.push_back(0);
@@ -61,5 +49,5 @@ Edge *MonteCarloHeuristic::getNext()
 
 Heuristic *MonteCarloHeuristic::createNextHeuristic(std::vector<Edge *> edges)
 {
-    return new MonteCarloHeuristic(edges, this->lookup);
+    return new MonteCarloHeuristic(edges);
 }

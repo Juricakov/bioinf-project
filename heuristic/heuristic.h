@@ -11,13 +11,13 @@ class Heuristic
 {
 protected:
     std::vector<Edge *> edges;
-    std::unordered_map<string, Node *> lookup;
 
-    Heuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup)
+    Heuristic(std::vector<Edge *> edges)
     {
-        this->lookup = lookup;
-        std::copy_if(edges.begin(), edges.end(), std::back_inserter(this->edges), [lookup, this](Edge *e)
-                     { return this->extends(e, lookup); });
+        this->edges = edges;
+        // already filtered        
+        // std::copy_if(edges.begin(), edges.end(), std::back_inserter(this->edges), [lookup, this](Edge *e)
+        //              { return this->extends(e, lookup); });
     }
 
 private:

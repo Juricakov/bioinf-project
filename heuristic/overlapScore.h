@@ -9,7 +9,7 @@ private:
     static bool compare(Edge *a, Edge *b);
     
 public:
-    OverlapScoreHeuristic(std::vector<Edge *> edges, std::unordered_map<string, Node *> lookup);
+    OverlapScoreHeuristic(std::vector<Edge *> edges);
 
     bool hasNext();
     Edge *getNext();
