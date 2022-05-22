@@ -10,8 +10,10 @@ const int defaultMaxSingleBucketLenRange = 10000;
 class PathSelector
 {
 private:
-    int bucketWindow;
-    int maxSingleBucketLenRange;
+    // todo for some reason constructor does not work
+    // fot ints only, sequence generator ok?
+    int bucketWindow = defaultBucketWindowSize;
+    int maxSingleBucketLenRange = defaultMaxSingleBucketLenRange;
     SequenceGenerator sequenceGenerator;
 
 public:
@@ -27,5 +29,5 @@ public:
         PathSelector(sequenceGenerator, defaultBucketWindowSize, defaultMaxSingleBucketLenRange);
     }
 
-    Path *pick(std::vector<Path> paths, std::unordered_map<string, Node *> lookup);
+    Path *pick(std::vector<Path *> paths, std::unordered_map<string, Node *> lookup);
 };

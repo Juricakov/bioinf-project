@@ -9,8 +9,7 @@ int OverlapScoreHeuristic::getOverlapLength(Edge *edge)
 bool OverlapScoreHeuristic::compare(Edge *a, Edge *b)
 {
     // have to return true if first argument is less than second    
-    // question from g: why, reverse works better on small example    
-    return getOverlapLength(a) > getOverlapLength(b);
+    return getOverlapLength(a) < getOverlapLength(b);
 }
 
 OverlapScoreHeuristic::OverlapScoreHeuristic(std::vector<Edge *> edges) : Heuristic(edges)

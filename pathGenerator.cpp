@@ -9,7 +9,7 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 {
     vector<Path *> allGeneratedPaths;
 
-    for (int i = 0; i < 2 && heuristic->hasNext(); i++)
+    for (int i = 0; i < 40 && heuristic->hasNext(); i++)
     {
 
         // cout << "NEW PATH" << endl;
@@ -37,18 +37,18 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path, unordered_map<string, int> *visited)
 {
 
-    for (int i = 0; i < 5 && heuristic->hasNext(); i++)
+    for (int i = 0; i < 20 && heuristic->hasNext(); i++)
     {
         Edge *bestOverlap = heuristic->getNext();
         path->push(bestOverlap);
 
         auto nextNode = lookup.at(bestOverlap->getNeighbour(from->key));
 
-        // if (path->size() % 10 == 0)
-        // {
-        //     cout << "still alive " << path->size() << endl;
-        //     cout << nextNode->key << endl;
-        // }
+        if (path->size() % 1000 == 0)
+        {
+            cout << "still alive " << path->size() << endl;
+            cout << nextNode->key << endl;
+        }
 
         if (nextNode->type == Type::CONTIG)
         {
