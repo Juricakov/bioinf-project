@@ -1,6 +1,8 @@
 #include <unordered_map>
 #include <iostream>
+#include <memory>
 #include "Node.h"
+#include "namedSequence.h"
 
 using namespace std;
 
@@ -29,5 +31,7 @@ public:
 
     // if present return otherwise create new one and return
     // always create pairs, first is regular, second complement
-    pair<Node *, Node *> getOrInitialize(string id, int length, Type type);
+    pair<Node *, Node *> getOrInitialize(string id, Type type);
+
+    void addSequences(vector<shared_ptr<NamedSequnce>>);
 };

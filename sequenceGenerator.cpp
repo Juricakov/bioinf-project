@@ -1,5 +1,6 @@
 #include "sequenceGenerator.h"
 #include <numeric>
+#include <iostream>
 
 std::string SequenceGenerator::generate(Path *path, std::unordered_map<std::string, Node *> lookup)
 {
@@ -11,12 +12,10 @@ std::string SequenceGenerator::generate(Path *path, std::unordered_map<std::stri
     for (auto edge : path->getEdges())
     {
         auto nextNode = lookup[edge->targetSequenceName];
-        if (edge->relativeStrand == '-')
-        {
-            nextNode = nextNode->complement;
-        }
-
-        sequencePieces.push_back(nextNode->sequence.substr(edge->targetStart, edge->targetEnd - edge->targetStart));
+        auto numSteps = edge->targetEnd - edge->targetStart;
+        numSteps = nextNode->sequence.length() - edge->targetEnd;
+        auto substr = nextNode->sequence.substr(edge->targetEnd, numSteps);
+        sequencePieces.push_back(substr);
     }
 
     return std::accumulate(sequencePieces.begin(), sequencePieces.end(), std::string(""));

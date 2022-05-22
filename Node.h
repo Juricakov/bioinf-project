@@ -1,10 +1,11 @@
+#pragma once
 #include <string>
 #include <vector>
 #include "Global.h"
 #include "Edge.h"
+#include <unordered_map>
 
 using namespace std;
-// TODO Grigor add sequences
 
 // nodes represent reads
 // in hera paper complementary nodes are also connected, should not be possible to use
@@ -22,19 +23,20 @@ public:
     // for regular nodes key and id are identical
     string key;
 
-    int length;
-    vector<Edge *> overlaps;
+    unordered_map<string, Edge *> overlaps;
     Node *complement = nullptr;
 
     Node(){};
 
     // key is automatically set to same value as id
-    Node(Type t, string name, int len);
+    Node(Type t, string name);
 
     // constructor for complements, automatic key change
-    Node(Type t, string name, int len, Node *c, bool isCompl);
+    Node(Type t, string name, Node *c, bool isCompl);
 
     void addOverlap(Edge *overlap);
 
     bool isComplement();
+
+    vector<Edge *> getOverlaps();
 };

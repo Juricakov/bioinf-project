@@ -9,23 +9,25 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "reader.h"
+#include "iostream"
 
-bool startsWith(std::string str, std::string prefix)
+// compiler complains if the name is same as in fasta reader
+bool startsWithFastq(std::string str, std::string prefix)
 {
     return str.compare(0, prefix.length(), prefix) == 0;
 }
 
-const char *whitespace = " \t\n\r\f\v";
+const char *whitespaceFastq = " \t\n\r\f\v";
 
 inline std::string &rtrim(std::string &s)
 {
-    s.erase(s.find_last_not_of(whitespace) + 1);
+    s.erase(s.find_last_not_of(whitespaceFastq) + 1);
     return s;
 }
 
 inline std::string &ltrim(std::string &s)
 {
-    s.erase(0, s.find_first_not_of(whitespace));
+    s.erase(0, s.find_first_not_of(whitespaceFastq));
     return s;
 }
 
@@ -68,18 +70,18 @@ std::vector<std::shared_ptr<NamedSequnce>> FASTQReader::read(std::string path)
 
         line = trim(line);
 
-        if (startsWith(line, ";") || (line.length() == 0)) // comment or empty
+        if (startsWithFastq(line, ";") || (line.length() == 0)) // comment or empty
         {
             continue;
         }
 
-        if (startsWith(line, "+")) // separator for quality, wont load next line which contains quality info
+        if (startsWithFastq(line, "+")) // separator for quality, wont load next line which contains quality info
         {
             skipNext = true;
             continue;
         }
 
-        if (!startsWith(line, "@"))
+        if (!startsWithFastq(line, "@"))
         {
             sequence += line;
             continue;

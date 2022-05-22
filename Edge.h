@@ -1,4 +1,6 @@
+#pragma once
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -6,8 +8,8 @@ using namespace std;
 class Edge
 {
 public:
-    std::string querySequenceName;
-    std::string targetSequenceName;
+    string querySequenceName;
+    string targetSequenceName;
     // where overlap starts on query
     int queryStart;
     int queryEnd;
@@ -19,12 +21,17 @@ public:
     int targetStart;
     int targetEnd;
 
-    int alignmentBlockLengt;
+    int querySeqeunceLength;
+    int targetSequenceLength;
+
+    int alignmentBlockLength;
 
     Edge();
 
     Edge(string query, string target, int qStart, int qEnd, char strand,
-         int tStart, int tEnd, int numMatches, int allignLen, int quality);
+         int tStart, int tEnd, int allignLen, int querySeqeunceLength, int targetSequenceLength);
 
     string getNeighbour(string sequenceName);
+
+    Edge *flipQueryAndTarget();
 };

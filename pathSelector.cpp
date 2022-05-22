@@ -220,6 +220,10 @@ Path *PathSelector::pick(std::vector<Path> paths, std::unordered_map<string, Nod
     // if only one group, simple outcome.
     if (representativePathAndValidPathCount.size() == 1)
     {
+        if (representativePathAndValidPathCount.at(0).first == nullptr)
+        {
+            cout << "nullptr in selector" << endl;
+        }
         return representativePathAndValidPathCount.at(0).first;
     }
 
@@ -248,8 +252,16 @@ Path *PathSelector::pick(std::vector<Path> paths, std::unordered_map<string, Nod
     // if valid path count in longer sequence is more than 2x in shorter sequence, then use longer sequence
     if (maxGroupLengthSumSequence.second > 2 * secondMaxGroupLengthSumSequence.second)
     {
+        if (maxGroupLengthSumSequence.first == nullptr)
+        {
+            cout << "nullptr in selector" << endl;
+        }
         return maxGroupLengthSumSequence.first;
     }
     // otherwise
+    if (secondMaxGroupLengthSumSequence.first == nullptr)
+    {
+        cout << "nullptr in selector" << endl;
+    }
     return secondMaxGroupLengthSumSequence.first;
 }

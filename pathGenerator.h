@@ -1,12 +1,12 @@
 #include "path.h"
 #include "vector"
 #include "Node.h"
-#include "heuristic.h"
+#include "heuristic/heuristic.h"
 #include "pathSelector.h"
 
-// TODO Grigor implement
 class PathGenerator
 {
 public:
-    static Path *generate(Node *from, Heuristic heuristic, PathSelector selector);
+    static vector<Path *> generate(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup);
+    static bool find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path);
 };
