@@ -30,6 +30,13 @@ Type PafParser::getSequenceTypeFromName(string name)
     return Type::READ;
 }
 
+ostream &operator<<(std::ostream &strm, const Edge &e)
+{
+    return strm << "Edge(" << e.querySequenceName << ", " << e.queryStart << ", "
+                << e.queryEnd << ", " << e.relativeStrand << ", " << e.targetSequenceName
+                << ", " << e.targetStart << ", " << e.targetEnd << ")";
+}
+
 Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> fastaFilenames)
 {
     Graph graph = Graph();
@@ -98,20 +105,6 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                     endQueryIndex, relativeStrand, startTargetIndexHelper,
                     endTargetIndexHepler, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                // check if extends
-                int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
-                int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
-
-                // do not create edge or nodes if overlap does not extend the sequence
-                if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
-                {
-                    queryNodes.first->addOverlap(edge1);
-                }
-                else
-                {
-                    targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
-                }
-
                 int startQueryIndexHelper = querySequenceLength - endQueryIndex;
                 int endQueryIndexHepler = querySequenceLength - startQueryIndex;
 
@@ -120,16 +113,20 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                     endQueryIndexHepler, relativeStrand, startTargetIndex,
                     endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
-                baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndexHepler;
-                baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
+                // check if extends
+                int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
+                int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndexHepler;
 
+                // do not create edge or nodes if overlap does not extend the sequence
                 if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
                 {
-                    queryNodes.second->addOverlap(edge2);
+                    queryNodes.first->addOverlap(edge1);
+                    targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
                 }
                 else
                 {
-                    targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
+                    targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
+                    queryNodes.second->addOverlap(edge2);
                 }
             }
             // no index reversing, add edges beetwen regulars
@@ -140,6 +137,12 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                     endQueryIndex, relativeStrand, startTargetIndex,
                     endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
 
+                Edge *edge2 = new Edge(
+                    querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
+                    querySequenceLength - endQueryIndex, querySequenceLength - startQueryIndex,
+                    relativeStrand, targetSequenceLength - endTargetIndex, targetSequenceLength - startTargetIndex,
+                    stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
+
                 // check if extends
                 int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
                 int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndex;
@@ -147,34 +150,19 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                 if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
                 {
                     queryNodes.first->addOverlap(edge1);
+                    targetNodes.second->addOverlap(edge2->flipQueryAndTarget());
                 }
 
                 else
                 {
                     targetNodes.first->addOverlap(edge1->flipQueryAndTarget());
-                }
-
-                Edge *edge2 = new Edge(
-                    querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
-                    querySequenceLength - endQueryIndex, querySequenceLength - startQueryIndex,
-                    relativeStrand, targetSequenceLength - endTargetIndex, targetSequenceLength - startTargetIndex,
-                    stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
-
-                // opposite of non complement ones
-
-                if (!baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
-                {
                     queryNodes.second->addOverlap(edge2);
-                }
-                else
-                {
-                    targetNodes.second->addOverlap(edge2->flipQueryAndTarget());
                 }
             }
         }
         inFile.close();
     }
-
+    
     vector<shared_ptr<NamedSequnce>> s1;
     vector<shared_ptr<NamedSequnce>> s2;
 

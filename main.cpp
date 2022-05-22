@@ -46,20 +46,27 @@ int main()
     SequenceGenerator generator;
     PathSelector selector(generator);
 
-    vector<Path*> allPaths;
+    vector<Path *> allPaths;
 
+    // maybe try to generate full path from each
     for (auto contig : g.contigs)
     {
+        // start contig should not be complement
+        if (contig.second->isComplement()) continue;
 
         cout << contig.first << endl;
 
-        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        cout << "extension" << endl;
+        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps());
         auto pathsExtension = PathGenerator::generate(contig.second, hExtension, g.nodes);
 
-        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps(), g.nodes);
+        cout << "overlap" << endl;
+
+        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps());
         auto pathsOverlap = PathGenerator::generate(contig.second, hOverlap, g.nodes);
 
-        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps(), g.nodes);
+        cout << "mc" << endl;
+        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps());
         auto pathsMonteCarlo = PathGenerator::generate(contig.second, hMonteCarlo, g.nodes);
 
         vector<Path> pathsOneNode;
@@ -87,29 +94,33 @@ int main()
             continue;
         }
 
-        // cout << pathsOneNode.at(0).size() << endl;
-        // auto newPath = selector.pick(pathsOneNode, g.nodes);
-        // cout << newPath.size() << endl;
+        // auto path = selector.pick(pathsOneNode, g.nodes);
 
-        // allPaths.push_back(&newPath);
+        // // cout << "picker" << endl;
+        // // cout << path->getId() << " " << path->getStartNodeName() << endl;
+
+        allPaths.push_back(pathsExtension.at(0));
     }
 
+    cout << "all paths " << allPaths.size() << endl;
 
-    // cout << "all paths " << allPaths.size() << endl;
-    
-    // if (allPaths.at(0) == nullptr){
-    //     cout << "null";
-    // }
-    
-    // cout << allPaths.at(0)->size() << endl;
+    for (auto path : allPaths)
+    {
+        cout << "path" << endl;
+        cout << path->getId() << " " << path->getStartNodeName() << " " << path->getEndNodeName() << endl;
+    }
 
-    // auto finalPath = PathMerger::merge(allPaths, g.nodes);
+    auto finalPath = PathMerger::merge(allPaths, g.nodes);
 
-    // cout << "a" << endl;
-    // cout << finalPath->size();
-    // auto finalSequence = generator.generate(finalPath, g.nodes);
+    cout << "end merge" << endl;
 
-    // cout << finalSequence.size();
+    cout << finalPath->getStart(g.nodes)->key << endl;
+    cout << finalPath->getEnd(g.nodes)->key << endl;
+    cout << finalPath->size() << endl;
+
+    auto finalSequence = generator.generate(finalPath, g.nodes);
+
+    cout << finalSequence.size();
 
     return 0;
 }
