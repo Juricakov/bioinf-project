@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_map>
 #include "pathGenerator.h"
 #include "heuristic/heuristic.h"
 #include "path.h"
@@ -8,8 +9,9 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
 {
     vector<Path *> allGeneratedPaths;
 
-    for (int i = 0; i < 5 && heuristic->hasNext(); i++)
+    for (int i = 0; i < 40 && heuristic->hasNext(); i++)
     {
+
         // cout << "NEW PATH" << endl;
         Path *path = new Path;
 
@@ -20,7 +22,10 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
         path->push(overlap);
         auto nextNode = lookup.at(overlap->getNeighbour(from->key));
 
-        if (find(nextNode, heuristic->createNextHeuristic(nextNode->getOverlaps()), lookup, path))
+        unordered_map<string, int> *visited = new unordered_map<string, int>;
+        visited->insert({nextNode->id, 0});
+
+        if (find(nextNode, heuristic->createNextHeuristic(nextNode->getOverlaps()), lookup, path, visited))
         {
             allGeneratedPaths.push_back(path);
         }
@@ -29,22 +34,21 @@ vector<Path *> PathGenerator::generate(Node *from, Heuristic *heuristic, unorder
     return allGeneratedPaths;
 }
 
-bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path)
+bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string, Node *> lookup, Path *path, unordered_map<string, int> *visited)
 {
-    // cout << "start find" << endl;
 
-    for (int i = 0; i < 5 && heuristic->hasNext(); i++)
+    for (int i = 0; i < 20 && heuristic->hasNext(); i++)
     {
         Edge *bestOverlap = heuristic->getNext();
         path->push(bestOverlap);
 
         auto nextNode = lookup.at(bestOverlap->getNeighbour(from->key));
 
-        // if (path->size() % 10 == 0)
-        // {
-        //     cout << "still alive " << path->size() << endl;
-        //     cout << nextNode->key << endl;
-        // }
+        if (path->size() % 1000 == 0)
+        {
+            cout << "still alive " << path->size() << endl;
+            cout << nextNode->key << endl;
+        }
 
         if (nextNode->type == Type::CONTIG)
         {
@@ -52,9 +56,17 @@ bool PathGenerator::find(Node *from, Heuristic *heuristic, unordered_map<string,
             return true;
         }
 
+        if (visited->find(nextNode->id) != visited->end())
+        {
+            path->pop();
+            continue;
+        }
+
+        visited->insert({nextNode->id, visited->at(from->id)});
+
         auto nextHeuristic = heuristic->createNextHeuristic(nextNode->getOverlaps());
 
-        if (find(nextNode, nextHeuristic, lookup, path))
+        if (find(nextNode, nextHeuristic, lookup, path, visited))
         {
             return true;
         };

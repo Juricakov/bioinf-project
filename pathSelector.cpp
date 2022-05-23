@@ -8,12 +8,13 @@ std::vector<std::vector<Path *>> partitionIntoBuckets(std::vector<Path *> sorted
     std::vector<std::vector<Path *>> buckets;
 
     std::vector<Path *> bucket;
-    int bucketMin = sortedPaths.front()->size();
+    int bucketMin = pathLengthsById[sortedPaths.front()->getId()];
     int bucketMax = bucketMin + bucketWindowSize;
 
     for (auto path : sortedPaths)
     {
-        if (bucketMin <= path->size() && path->size() <= bucketMax)
+        // todo it was path->size(), everywhere else this is used?
+        if (bucketMin <= pathLengthsById[path->getId()] && pathLengthsById[path->getId()] <= bucketMax)
         {
             bucket.push_back(path);
             continue;
@@ -23,7 +24,7 @@ std::vector<std::vector<Path *>> partitionIntoBuckets(std::vector<Path *> sorted
         bucket = std::vector<Path *>();
 
         bucket.push_back(path);
-        bucketMin = path->size();
+        bucketMin = pathLengthsById[path->getId()];
         bucketMax = bucketMin + bucketWindowSize;
     }
 
@@ -51,8 +52,11 @@ std::pair<Path *, int> getGroupConsensusPathAndValidPathNumber(std::vector<Path 
 
     auto range = maxLen - minLen;
     // complex repeat
-    if (range > 100000)
+    // todo return previous value, 100 000
+    // only bigge than 100 000 works for now
+    if (range > 1000000)
     {
+        cout << "NULL " << range << endl;
         return std::pair<Path *, int>(nullptr, 0);
     }
 
@@ -65,7 +69,7 @@ std::pair<Path *, int> getGroupConsensusPathAndValidPathNumber(std::vector<Path 
     // the number of similar paths is called the valid path number.
     int similarityThreshold = 100;
     Path *mostSimilarPaths;
-    int similarPathCount = __INT_MAX__;
+    int similarPathCount = INT_MIN;
 
     for (auto path1 : options)
     {
@@ -104,7 +108,7 @@ Path *PathSelector::pick(std::vector<Path *> paths, std::unordered_map<string, N
 
     for (auto path : paths)
     {
-        auto len = this->sequenceGenerator.generate(path, lookup).length();
+        int len = this->sequenceGenerator.generate(path, lookup).length();
         pathLengthsById[path->getId()] = len;
         if (len > maxPathLength)
         {
@@ -192,6 +196,7 @@ Path *PathSelector::pick(std::vector<Path *> paths, std::unordered_map<string, N
 
         // if the lowest length in valley is less than 90% of the highest length in the peak,
         // then the path length of the lowest length in valley bucket is used to divide the original paths into buckets
+        cout << valleyBucketLowestLength << " " << peakBucketHighestLength << endl;
         if (valleyBucketLowestLength < (0.9 * peakBucketHighestLength))
         {
             buckets = partitionIntoBuckets(sortedPaths, pathLengthsById, valleyBucketLowestLength);

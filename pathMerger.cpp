@@ -33,7 +33,7 @@ Path *PathMerger::merge(std::vector<Path *> paths, std::unordered_map<std::strin
         {
             throw std::invalid_argument("Multiple paths end on same contig");
         }
-        pathByEndNodeName[startNode->id] = path;
+        pathByEndNodeName[endNode->id] = path;
     }
 
     std::vector<Path *> orderedPaths;
@@ -76,7 +76,7 @@ Path *PathMerger::merge(std::vector<Path *> paths, std::unordered_map<std::strin
         }
     }
 
-    Path *result;
+    Path *result = new Path();
 
     for (auto path : orderedPaths)
     {

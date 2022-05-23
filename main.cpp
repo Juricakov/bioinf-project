@@ -6,6 +6,7 @@
 #include "sequenceGenerator.h"
 #include "pafParser.h"
 #include "pathMerger.h"
+#include "unordered_set"
 
 int Path::current_id = 0;
 
@@ -35,8 +36,7 @@ int main()
     Graph g = PafParser::readPafFile(pafFileNames, fastaFileNames);
 
     cout << "num nodes: " << g.nodes.size() << endl;
-    cout << "num contigs: " << g.contigs.size() << endl
-         << endl;
+    cout << "num contigs: " << g.contigs.size() << endl;
 
     // complex main not needed, all paths from same node are sent to selector
     // all paths are sent to merger
@@ -46,63 +46,114 @@ int main()
     SequenceGenerator generator;
     PathSelector selector(generator);
 
-    vector<Path *> allPaths;
+    Node *startNode;
+    unordered_map<string, Path *> selectedPathForNode;
+    vector<Path *> fullPath(g.contigs.size());
 
     for (auto contig : g.contigs)
     {
+        // // start contig should not be complement
+        // if (contig.second->isComplement())
+        //     continue;
 
-        cout << contig.first << endl;
+        startNode = contig.second;
 
-        Heuristic *hExtension = new ExtensionScoreHeuristic(contig.second->getOverlaps());
-        auto pathsExtension = PathGenerator::generate(contig.second, hExtension, g.nodes);
+        fullPath.clear();
+        unordered_set<string> visited;
+        // stop after pick or ignore earlier?
 
-        Heuristic *hOverlap = new OverlapScoreHeuristic(contig.second->getOverlaps());
-        auto pathsOverlap = PathGenerator::generate(contig.second, hOverlap, g.nodes);
+        visited.insert(startNode->id);
 
-        Heuristic *hMonteCarlo = new MonteCarloHeuristic(contig.second->getOverlaps());
-        auto pathsMonteCarlo = PathGenerator::generate(contig.second, hMonteCarlo, g.nodes);
-
-        vector<Path *> pathsOneNode;
-
-        for (int i = 0; i < max({pathsExtension.size(), pathsOverlap.size(), pathsMonteCarlo.size()}); i++)
+        int cnt = 0;
+        // max path connects all contigs (/2 because of complements)
+        while (startNode != nullptr && cnt < (g.contigs.size() - 1) / 2)
         {
-            if (i < pathsExtension.size())
+            Path *selectedPath;
+            // new paths needs to be created
+            if (selectedPathForNode.find(startNode->key) == selectedPathForNode.end())
             {
-                pathsOneNode.push_back(pathsExtension.at(i));
+                cout << endl
+                     << startNode->key << endl;
+
+                Heuristic *hExtension = new ExtensionScoreHeuristic(startNode->getOverlaps());
+                auto pathsExtension = PathGenerator::generate(startNode, hExtension, g.nodes);
+
+                cout << "overlap" << endl;
+
+                Heuristic *hOverlap = new OverlapScoreHeuristic(startNode->getOverlaps());
+                auto pathsOverlap = PathGenerator::generate(startNode, hOverlap, g.nodes);
+
+                cout << "mc" << endl;
+
+                Heuristic *hMonteCarlo = new MonteCarloHeuristic(startNode->getOverlaps());
+                auto pathsMonteCarlo = PathGenerator::generate(startNode, hMonteCarlo, g.nodes);
+
+                vector<Path *> pathsOneNode;
+
+                for (int i = 0; i < max({pathsExtension.size(), pathsOverlap.size(), pathsMonteCarlo.size()}); i++)
+                {
+                    if (i < pathsExtension.size())
+                    {
+                        pathsOneNode.push_back(pathsExtension.at(i));
+                    }
+
+                    if (i < pathsOverlap.size())
+                    {
+                        pathsOneNode.push_back(pathsOverlap.at(i));
+                    }
+
+                    if (i < pathsMonteCarlo.size())
+                    {
+                        pathsOneNode.push_back(pathsMonteCarlo.at(i));
+                    }
+                }
+
+                if (pathsOneNode.empty())
+                {
+                    selectedPathForNode[startNode->key] = nullptr;
+                    break;
+                }
+
+                selectedPath = selector.pick(pathsOneNode, g.nodes);
+                selectedPathForNode[startNode->key] = selectedPath;
+            }
+            else
+            {
+                selectedPath = selectedPathForNode.at(startNode->key);
             }
 
-            if (i < pathsOverlap.size())
-            {
-                pathsOneNode.push_back(pathsOverlap.at(i));
-            }
+            if (selectedPath == nullptr)
+                break;
 
-            if (i < pathsMonteCarlo.size())
+            startNode = selectedPath->getEnd(g.nodes);
+
+            if (visited.find(startNode->id) != visited.end())
             {
-                pathsOneNode.push_back(pathsMonteCarlo.at(i));
+                break;
             }
+            visited.insert(startNode->id);
+
+            cout << endl
+                 << selectedPath->getStartNodeName() << " " << selectedPath->getEndNodeName() << endl;
+
+            fullPath.push_back(selectedPath);
+            cnt++;
         }
 
-        if (pathsOneNode.empty())
+        // if full path found stop search
+        if (fullPath.size() == (g.contigs.size() - 1) / 2)
         {
-            continue;
+            break;
         }
-
-        allPaths.push_back(selector.pick(pathsOneNode, g.nodes));
     }
 
-    cout << "all paths" << endl;
+    cout << "before merger" << endl;
 
-    for (auto path : allPaths)
-    {
-        cout << path->getId() << " from " << path->getStartNodeName() << " to " << path->getEndNodeName() << endl;
-    }
-
-    auto finalPath = PathMerger::merge(allPaths, g.nodes);
-
-    cout << "a" << endl;
-    cout << finalPath->size();
+    auto finalPath = PathMerger::merge(fullPath, g.nodes);
     auto finalSequence = generator.generate(finalPath, g.nodes);
-    cout << finalSequence.size();
 
+    cout << finalSequence.length() << endl
+         << endl;
+    cout << finalSequence;
     return 0;
 }
