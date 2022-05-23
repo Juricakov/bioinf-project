@@ -1,16 +1,29 @@
 #include "overlapScore.h"
 #include <iostream>
 
-int OverlapScoreHeuristic::getOverlapLength(Edge *edge)
+/*
+    target sequence (S2) is extending query sequence (S1)
+    we are getting extension score for S2
+
+            012345 678 9
+    QUERY = AAAAAA[AAA]G
+            012 345
+    TARGET = [AAA]BBC
+*/
+
+float OverlapScoreHeuristic::getOverlapScore(Edge *edge)
 {
-    return edge->queryEnd - edge->queryStart;
+    int OL1 = edge->queryEnd - edge->queryStart;
+    int OL2 = edge->targetEnd - edge->targetStart;
+    int SI = edge->numberOfMatchingBases;
+
+    return (OL1 + OL2) * SI / 2;
 };
 
 bool OverlapScoreHeuristic::compare(Edge *a, Edge *b)
 {
-    // have to return true if first argument is less than second
-    // question from g: why, reverse works better on small example
-    return getOverlapLength(a) > getOverlapLength(b);
+    // comparator expects a < b to sort in ascending order, but we want ascending.
+    return getOverlapScore(a) > getOverlapScore(b);
 }
 
 OverlapScoreHeuristic::OverlapScoreHeuristic(std::vector<Edge *> edges) : Heuristic(edges)

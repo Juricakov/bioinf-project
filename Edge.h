@@ -26,6 +26,9 @@ public:
 
     int alignmentBlockLength;
 
+    // TODO Grigor Add
+    int numberOfMatchingBases;
+
     Edge();
 
     Edge(string query, string target, int qStart, int qEnd, char strand,

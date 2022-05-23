@@ -3,7 +3,7 @@
 class ExtensionScoreHeuristic : public Heuristic
 {
 private:
-    static int getExtensionLength(Edge *edge);
+    static float getExtensionScore(Edge *edge);
     int currentIndex = 0;
 
 public:

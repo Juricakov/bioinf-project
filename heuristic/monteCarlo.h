@@ -3,14 +3,7 @@
 class MonteCarloHeuristic : public Heuristic
 {
 private:
-    /*
-
-            012345 678 9
-    QUERY = AAAAAA[AAA]G
-            012 345
-    TARGET = [AAA]BBC
-    */
-    static int getExtensionLength(Edge *edge);
+    static float getExtensionScore(Edge *edge);
 
     /*
     probabilities[i] is chosen if random number [0, 1] is in range <probabilities[i], probabilities[i + 1]].
