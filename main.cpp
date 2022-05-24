@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    if (argc != 6)
+    if (argc != 7)
     {
         throw runtime_error("Missing arguments");
     }
@@ -24,6 +24,7 @@ int main(int argc, char *argv[])
     vector<string> pafFileNames{argv[1], argv[2]};
     pair<string, string> fastaFileNames{argv[3], argv[4]};
     string resultFilename = argv[5];
+    int maxPathsGenerated = stoi(argv[6]);
 
     Graph g = PafParser::readPafFile(pafFileNames, fastaFileNames);
 
@@ -61,17 +62,17 @@ int main(int argc, char *argv[])
                      << startNode->key << endl;
 
                 Heuristic *hExtension = new ExtensionScoreHeuristic(startNode->getOverlaps());
-                auto pathsExtension = PathGenerator::generate(startNode, hExtension, g.nodes, 20);
+                auto pathsExtension = PathGenerator::generate(startNode, hExtension, g.nodes, maxPathsGenerated);
 
                 cout << "overlap" << endl;
 
                 Heuristic *hOverlap = new OverlapScoreHeuristic(startNode->getOverlaps());
-                auto pathsOverlap = PathGenerator::generate(startNode, hOverlap, g.nodes, 20);
+                auto pathsOverlap = PathGenerator::generate(startNode, hOverlap, g.nodes, maxPathsGenerated);
 
                 cout << "mc" << endl;
 
                 Heuristic *hMonteCarlo = new MonteCarloHeuristic(startNode->getOverlaps());
-                auto pathsMonteCarlo = PathGenerator::generate(startNode, hMonteCarlo, g.nodes, 40);
+                auto pathsMonteCarlo = PathGenerator::generate(startNode, hMonteCarlo, g.nodes, maxPathsGenerated);
 
                 vector<Path *> pathsOneNode;
 
