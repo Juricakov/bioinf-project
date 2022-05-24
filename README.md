@@ -1,14 +1,6 @@
-# bioinf-project
+# Projektni zadatak iz bioinformatike
 
-## komplementi
+Za prevođenje programa potrebmo je pokrenuti sljedeću naredbu:
+g++ pafParser.cpp Graph.cpp Edge.cpp Node.cpp fasta/reader.cpp namedSequence.cpp heuristic/extensionScore.cpp pathSelector.cpp pathGenerator.cpp heuristic/overlapScore.cpp path.cpp pathMerger.cpp sequenceGenerator.cpp heuristic/monteCarlo.cpp fastq/reader.cpp main.cpp fasta/writer.cpp  
 
-treba paziti da se ne iskoriste i originalna sekvenca i komplement, ako se dobro
-sjecam u radu u grafu posebnom vezom spajaju originale i komplemente
-indeksi se uvijek odnose na originalni kad je minus treba ih obrnut?
-ako je sekvenca duga 100 i match je sa -,u pafu pise od 10 do 85 onda kada se napravi
-reverzni komplement matching sekvenca je od 15 do 90
-dal se i contigi mogu reverzat
-
-## problem sa provjerom dal extenda
-edge izmedu r1 i r2 je jednak u r1 i u r2, tako da ispada da se i iz r1 moze extendat u r2 i iz r2 extednat u r1 i onda se vrtimo u krug
-dodano dupliciranje edgeva, vjerojatno ce trebat mijenjat
+Program prima 5 argumenata kroz komandnu liniju. Prva dva argumenta su putanja do .paf datoteka sa preklapanjima (redoslijed nije bitan), druga dva argumenta su putanja do .fasta/.fastq datoteka s očitanjima (redoslijd nije bitan), a zadnje je putanja do datoteke u koju se upisuje rezultat. Tijek izvođenja programa može se pratiti zbog kontorlnih ispisa u komandnoj liniji. Primjer pokretanja programa: a overlaps1.paf overlaps2.paf ecoli_test_reads.fasta ecoli_test_contigs.fasta ecoli_full.fasta

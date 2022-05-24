@@ -12,21 +12,26 @@
 
 int Path::current_id = 0;
 
-int main()
+int main(int argc, char *argv[])
 {
     auto start = std::chrono::high_resolution_clock::now();
 
-    // hand made test example, replace "\t" with " " in paf parser
-    // vector<string> pafFileNames{"read-read.paf", "contig-read.paf"};
-    // pair<string, string> fastaFileNames{"readings.fasta", "contigs.fasta"};
+    if (argc != 6)
+    {
+        throw runtime_error("Missing arguments");
+    }
+
+    vector<string> pafFileNames{argv[1], argv[2]};
+    pair<string, string> fastaFileNames{argv[3], argv[4]};
+    string resultFilename = argv[5];
 
     // ecoli test data files
     // vector<string> pafFileNames{"overlaps1.paf", "overlaps2.paf"};
     // pair<string, string> fastaFileNames{"ecoli_test_reads.fasta", "ecoli_test_contigs.fasta"};
 
     // cjejuni data
-    vector<string> pafFileNames{"overlapsCjejuniCR.paf", "overlapsCjejuniRR.paf"};
-    pair<string, string> fastaFileNames{"CJejuni - reads.fastq", "CJejuni - contigs.fasta"};
+    // vector<string> pafFileNames{"overlapsCjejuniCR.paf", "overlapsCjejuniRR.paf"};
+    // pair<string, string> fastaFileNames{"CJejuni - reads.fastq", "CJejuni - contigs.fasta"};
 
     Graph g = PafParser::readPafFile(pafFileNames, fastaFileNames);
 
@@ -64,17 +69,17 @@ int main()
                      << startNode->key << endl;
 
                 Heuristic *hExtension = new ExtensionScoreHeuristic(startNode->getOverlaps());
-                auto pathsExtension = PathGenerator::generate(startNode, hExtension, g.nodes, 2);
+                auto pathsExtension = PathGenerator::generate(startNode, hExtension, g.nodes, 20);
 
                 cout << "overlap" << endl;
 
                 Heuristic *hOverlap = new OverlapScoreHeuristic(startNode->getOverlaps());
-                auto pathsOverlap = PathGenerator::generate(startNode, hOverlap, g.nodes, 2);
+                auto pathsOverlap = PathGenerator::generate(startNode, hOverlap, g.nodes, 20);
 
                 cout << "mc" << endl;
 
                 Heuristic *hMonteCarlo = new MonteCarloHeuristic(startNode->getOverlaps());
-                auto pathsMonteCarlo = PathGenerator::generate(startNode, hMonteCarlo, g.nodes, 20);
+                auto pathsMonteCarlo = PathGenerator::generate(startNode, hMonteCarlo, g.nodes, 40);
 
                 vector<Path *> pathsOneNode;
 
@@ -160,7 +165,7 @@ int main()
     cout << finalSequence.length() << endl;
 
     shared_ptr<NamedSequnce> namedFinal = shared_ptr<NamedSequnce>(new NamedSequnce("final sequence", finalSequence));
-    FASTAWriter::write("conected contigs 2+2+20+noqual+range400000.txt", {namedFinal});
+    FASTAWriter::write(resultFilename, {namedFinal});
 
     auto stop = std::chrono::high_resolution_clock::now();
 
