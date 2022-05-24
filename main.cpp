@@ -25,14 +25,6 @@ int main(int argc, char *argv[])
     pair<string, string> fastaFileNames{argv[3], argv[4]};
     string resultFilename = argv[5];
 
-    // ecoli test data files
-    // vector<string> pafFileNames{"overlaps1.paf", "overlaps2.paf"};
-    // pair<string, string> fastaFileNames{"ecoli_test_reads.fasta", "ecoli_test_contigs.fasta"};
-
-    // cjejuni data
-    // vector<string> pafFileNames{"overlapsCjejuniCR.paf", "overlapsCjejuniRR.paf"};
-    // pair<string, string> fastaFileNames{"CJejuni - reads.fastq", "CJejuni - contigs.fasta"};
-
     Graph g = PafParser::readPafFile(pafFileNames, fastaFileNames);
 
     cout << "num nodes: " << g.nodes.size() << endl;

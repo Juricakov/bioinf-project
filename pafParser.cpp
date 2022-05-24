@@ -107,7 +107,7 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
             }
 
             // if quality too low skip
-            // if ((float)numMatches/alligmentLength < 0.7) continue;
+            if ((float)numMatches/alligmentLength < 0.7) continue;
 
             // reverse indexes
             // add edges beetwen regular and complement
