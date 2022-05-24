@@ -67,8 +67,9 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
             string querySequenceName = spllitedLine[0];
 
             int querySequenceLength = stoi(spllitedLine[1]);
-
             char relativeStrand = spllitedLine[4][0];
+            int numMatches = stoi(spllitedLine[9]);
+            int alligmentLength = stoi(spllitedLine[10]);
 
             string targetSequenceName = spllitedLine[5];
             int targetSequenceLength = stoi(spllitedLine[6]);
@@ -93,6 +94,21 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                 targetSequenceName,
                 getSequenceTypeFromName(targetSequenceName));
 
+
+            // if one contains the other skip
+            int beforeBasesQuery = startQueryIndex;
+            int afterBasesQuery = querySequenceLength - endQueryIndex;
+
+            int beforeBasesTargert = startTargetIndex;
+            int afterBasesTarget = targetSequenceLength - endTargetIndex;
+
+            if (beforeBasesTargert > beforeBasesQuery && afterBasesTarget > afterBasesQuery) {
+                continue;
+            }
+
+            // if quality too low skip
+            // if ((float)numMatches/alligmentLength < 0.7) continue;
+
             // reverse indexes
             // add edges beetwen regular and complement
             if (relativeStrand == '-')
@@ -103,7 +119,7 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName + COMPLEMENT_SUFFIX, startQueryIndex,
                     endQueryIndex, relativeStrand, startTargetIndexHelper,
-                    endTargetIndexHepler, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
+                    endTargetIndexHepler, alligmentLength, querySequenceLength, targetSequenceLength, numMatches);
 
                 int startQueryIndexHelper = querySequenceLength - endQueryIndex;
                 int endQueryIndexHepler = querySequenceLength - startQueryIndex;
@@ -111,27 +127,35 @@ Graph PafParser::readPafFile(vector<string> pafFilenames, pair<string, string> f
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName, startQueryIndexHelper,
                     endQueryIndexHepler, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
+                    endTargetIndex, alligmentLength, querySequenceLength, targetSequenceLength, numMatches);
 
                 // check if extends
                 int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;
                 int baseCountAfterOverlapOnTargetSeq = targetSequenceLength - endTargetIndexHepler;
 
-                // do not create edge or nodes if overlap does not extend the sequence
-                // no index reversing, add edges beetwen regulars
+                if (baseCountAfterOverlapOnTargetSeq > baseCountAfterOverlapOnQuerySeq)
+                {
+                    queryNodes.first->addOverlap(edge1);
+                    targetNodes.first->addOverlap(edge2->flipQueryAndTarget());
+                }
+                else
+                {
+                    queryNodes.second->addOverlap(edge2);
+                    targetNodes.second->addOverlap(edge1->flipQueryAndTarget());
+                }
             }
             else
             {
                 Edge *edge1 = new Edge(
                     querySequenceName, targetSequenceName, startQueryIndex,
                     endQueryIndex, relativeStrand, startTargetIndex,
-                    endTargetIndex, stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
+                    endTargetIndex, alligmentLength, querySequenceLength, targetSequenceLength, numMatches);
 
                 Edge *edge2 = new Edge(
                     querySequenceName + COMPLEMENT_SUFFIX, targetSequenceName + COMPLEMENT_SUFFIX,
                     querySequenceLength - endQueryIndex, querySequenceLength - startQueryIndex,
                     relativeStrand, targetSequenceLength - endTargetIndex, targetSequenceLength - startTargetIndex,
-                    stoi(spllitedLine[10]), querySequenceLength, targetSequenceLength);
+                    alligmentLength, querySequenceLength, targetSequenceLength, numMatches);
 
                 // check if extends
                 int baseCountAfterOverlapOnQuerySeq = querySequenceLength - endQueryIndex;

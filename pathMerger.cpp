@@ -45,9 +45,6 @@ Path *PathMerger::merge(std::vector<Path *> paths, std::unordered_map<std::strin
     // expand by finding prev path of first path in list, or next path of last path in list.
     while (true)
     {
-        // looks like it never stops
-        std::cout << "a" << std::endl;
-
         auto p = orderedPaths.front();
         auto prev = pathByEndNodeName[p->getStart(lookup)->id];
         if (prev != nullptr)

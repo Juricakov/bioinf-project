@@ -15,14 +15,14 @@ float OverlapScoreHeuristic::getOverlapScore(Edge *edge)
 {
     int OL1 = edge->queryEnd - edge->queryStart;
     int OL2 = edge->targetEnd - edge->targetStart;
-    int SI = edge->numberOfMatchingBases;
+    int SI = edge->numberOfMatchingBases/edge->alignmentBlockLength;
 
     return (OL1 + OL2) * SI / 2;
 };
 
 bool OverlapScoreHeuristic::compare(Edge *a, Edge *b)
 {
-    // comparator expects a < b to sort in ascending order, but we want ascending.
+    // comparator expects a < b to sort in ascending order, but we want descending.
     return getOverlapScore(a) > getOverlapScore(b);
 }
 

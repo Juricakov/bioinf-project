@@ -12,18 +12,18 @@
     TARGET = [AAA]BBC
 */
 
-float getOverlapScore(Edge *edge)
+float getOverlapScoreMC(Edge *edge)
 {
     int OL1 = edge->queryEnd - edge->queryStart;
     int OL2 = edge->targetEnd - edge->targetStart;
-    int SI = edge->numberOfMatchingBases;
+    int SI = edge->numberOfMatchingBases/edge->numberOfMatchingBases;
 
     return (OL1 + OL2) * SI / 2;
 };
 
 float MonteCarloHeuristic::getExtensionScore(Edge *edge)
 {
-    int OS = getOverlapScore(edge);
+    int OS = getOverlapScoreMC(edge);
 
     // ~ len BBC
     int OH1 = edge->querySeqeunceLength - edge->queryEnd;

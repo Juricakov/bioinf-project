@@ -26,13 +26,12 @@ public:
 
     int alignmentBlockLength;
 
-    // TODO Grigor Add
     int numberOfMatchingBases;
 
     Edge();
 
     Edge(string query, string target, int qStart, int qEnd, char strand,
-         int tStart, int tEnd, int allignLen, int querySeqeunceLength, int targetSequenceLength);
+         int tStart, int tEnd, int allignLen, int querySeqeunceLength, int targetSequenceLength, int numMatches);
 
     string getNeighbour(string sequenceName);
 

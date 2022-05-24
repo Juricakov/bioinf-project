@@ -11,18 +11,18 @@
     TARGET = [AAA]BBC
 */
 
-float getOverlapScore(Edge *edge)
+float getOverlapScoreExtension(Edge *edge)
 {
     int OL1 = edge->queryEnd - edge->queryStart;
     int OL2 = edge->targetEnd - edge->targetStart;
-    int SI = edge->numberOfMatchingBases;
+    int SI = edge->numberOfMatchingBases / edge->alignmentBlockLength;
 
     return (OL1 + OL2) * SI / 2;
 };
 
 float ExtensionScoreHeuristic::getExtensionScore(Edge *edge)
 {
-    int OS = getOverlapScore(edge);
+    int OS = getOverlapScoreExtension(edge);
 
     // ~ len BBC
     int OH1 = edge->querySeqeunceLength - edge->queryEnd;
@@ -38,7 +38,7 @@ float ExtensionScoreHeuristic::getExtensionScore(Edge *edge)
 
 bool ExtensionScoreHeuristic::compare(Edge *a, Edge *b)
 {
-    // comparator expects a < b to sort in ascending order, but we want ascending.
+    // comparator expects a < b to sort in ascending order, but we want descending.
     return getExtensionScore(a) > getExtensionScore(b);
 }
 

@@ -10,8 +10,6 @@ const int defaultMaxSingleBucketLenRange = 10000;
 class PathSelector
 {
 private:
-    // todo for some reason constructor does not work
-    // fot ints only, sequence generator ok?
     int bucketWindow = defaultBucketWindowSize;
     int maxSingleBucketLenRange = defaultMaxSingleBucketLenRange;
     SequenceGenerator sequenceGenerator;

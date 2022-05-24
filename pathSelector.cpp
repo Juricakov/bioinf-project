@@ -13,7 +13,6 @@ std::vector<std::vector<Path *>> partitionIntoBuckets(std::vector<Path *> sorted
 
     for (auto path : sortedPaths)
     {
-        // todo it was path->size(), everywhere else this is used?
         if (bucketMin <= pathLengthsById[path->getId()] && pathLengthsById[path->getId()] <= bucketMax)
         {
             bucket.push_back(path);
@@ -54,7 +53,7 @@ std::pair<Path *, int> getGroupConsensusPathAndValidPathNumber(std::vector<Path 
     // complex repeat
     // todo return previous value, 100 000
     // only bigge than 100 000 works for now
-    if (range > 1000000)
+    if (range > 400000)
     {
         cout << "NULL " << range << endl;
         return std::pair<Path *, int>(nullptr, 0);
@@ -196,7 +195,6 @@ Path *PathSelector::pick(std::vector<Path *> paths, std::unordered_map<string, N
 
         // if the lowest length in valley is less than 90% of the highest length in the peak,
         // then the path length of the lowest length in valley bucket is used to divide the original paths into buckets
-        cout << valleyBucketLowestLength << " " << peakBucketHighestLength << endl;
         if (valleyBucketLowestLength < (0.9 * peakBucketHighestLength))
         {
             buckets = partitionIntoBuckets(sortedPaths, pathLengthsById, valleyBucketLowestLength);
